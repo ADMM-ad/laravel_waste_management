@@ -84,8 +84,8 @@
             --card-foreground: 240 10% 3.9%;
             --popover: 0 0% 100%;
             --popover-foreground: 240 10% 3.9%;
-            --primary: 240 5.9% 10%;
-            --primary-foreground: 0 0% 98%;
+            --primary: 152 76% 36%; /* Emerald 600 */
+            --primary-foreground: 355 100% 97%;
             --secondary: 240 4.8% 95.9%;
             --secondary-foreground: 240 5.9% 10%;
             --muted: 240 4.8% 95.9%;
@@ -96,7 +96,7 @@
             --destructive-foreground: 0 0% 98%;
             --border: 240 5.9% 90%;
             --input: 240 5.9% 90%;
-            --ring: 240 5.9% 10%;
+            --ring: 152 76% 36%;
             --radius: 0.5rem;
             --sidebar-background: 0 0% 98%;
             --sidebar-foreground: 240 5.3% 26.1%;
@@ -104,7 +104,7 @@
             --sidebar-primary-foreground: 0 0% 98%;
             --sidebar-accent: 240 4.8% 95.9%;
             --sidebar-accent-foreground: 240 5.9% 10%;
-            --sidebar-border: 240 5.9% 90%;
+            --sidebar-border: 220 13% 91%;
         }
 
         .dark {
@@ -114,8 +114,8 @@
             --card-foreground: 0 0% 98%;
             --popover: 240 10% 3.9%;
             --popover-foreground: 0 0% 98%;
-            --primary: 0 0% 98%;
-            --primary-foreground: 240 5.9% 10%;
+            --primary: 152 76% 40%;
+            --primary-foreground: 144 100% 11%;
             --secondary: 240 3.7% 15.9%;
             --secondary-foreground: 0 0% 98%;
             --muted: 240 3.7% 15.9%;
@@ -162,8 +162,9 @@
         }
     </script>
 
-    <!-- Lucide Icons -->
+    <!-- Lucide Icons & Chart.js -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @stack('styles')
 </head>
@@ -176,12 +177,12 @@
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-in-out lg:static lg:translate-x-0">
             <!-- Sidebar Header / Brand -->
             <div class="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
-                <a href="{{ url('/') }}" class="flex items-center gap-2.5 font-semibold text-sidebar-foreground">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 font-semibold text-sidebar-foreground">
                     <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
                         <i data-lucide="trash-2" class="h-4 w-4"></i>
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-sm font-semibold tracking-tight">Manajemen Sampah</span>
+                        <span class="text-sm font-semibold tracking-tight">Smart Waste</span>
                         <span class="text-[11px] text-muted-foreground">Admin Portal</span>
                     </div>
                 </a>
@@ -190,45 +191,61 @@
                 </button>
             </div>
 
-            <!-- Sidebar Navigation (Tepat 3 Menu Saja) -->
+            <!-- Sidebar Navigation -->
             <div class="flex-1 overflow-y-auto px-3 py-4">
                 <div class="px-2 pb-2 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
                     Menu Utama
                 </div>
                 <nav class="space-y-1">
                     <!-- Menu 1: Dashboard -->
-                    <a href="{{ url('/') }}"
-                       class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->is('/') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' }}">
+                    <a href="{{ route('admin.dashboard') }}"
+                       class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' }}">
                         <i data-lucide="layout-dashboard" class="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"></i>
                         <span>Dashboard</span>
                     </a>
 
-                    <!-- Menu 2: Data Sampah -->
-                    <a href="#"
-                       class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->is('sampah*') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' }}">
-                        <i data-lucide="layers" class="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"></i>
-                        <span>Data Sampah</span>
+                    <!-- Menu 2: Laporan -->
+                    <a href="{{ route('admin.reports.index') }}"
+                       class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.reports.*') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' }}">
+                        <i data-lucide="file-text" class="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"></i>
+                        <span>Laporan Warga</span>
                     </a>
 
-                    <!-- Menu 3: Laporan -->
-                    <a href="{{ route('laporan.index') }}"
-                       class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->is('laporan*') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' }}">
-                        <i data-lucide="file-text" class="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"></i>
-                        <span>Laporan</span>
+                    <!-- Menu 3: Pengguna -->
+                    <a href="{{ route('admin.users.index') }}"
+                       class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground' }}">
+                        <i data-lucide="users" class="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"></i>
+                        <span>Manajemen User</span>
+                    </a>
+
+                    <!-- Menu 4: API Docs -->
+                    <a href="{{ url('/docs/api') }}" target="_blank"
+                       class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+                        <i data-lucide="book-open" class="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"></i>
+                        <span>Dokumentasi API</span>
+                        <i data-lucide="external-link" class="h-3 w-3 ml-auto opacity-70"></i>
                     </a>
                 </nav>
             </div>
 
-            <!-- Sidebar Footer / User Info -->
+            <!-- Sidebar Footer / User Info & Logout -->
             <div class="border-t border-sidebar-border p-3">
-                <div class="flex items-center gap-3 rounded-md p-2 hover:bg-sidebar-accent">
-                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-secondary font-semibold text-xs text-secondary-foreground border border-border">
-                        AD
+                <div class="flex items-center justify-between gap-2 rounded-md p-2 hover:bg-sidebar-accent/50">
+                    <div class="flex items-center gap-2.5 overflow-hidden">
+                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs border border-border">
+                            {{ strtoupper(substr(Auth::user()->name ?? 'AD', 0, 2)) }}
+                        </div>
+                        <div class="flex flex-1 flex-col overflow-hidden text-left leading-tight">
+                            <span class="truncate text-xs font-medium text-sidebar-foreground">{{ Auth::user()->name ?? 'Administrator' }}</span>
+                            <span class="truncate text-[11px] text-muted-foreground">{{ Auth::user()->email ?? 'admin@banksampah.id' }}</span>
+                        </div>
                     </div>
-                    <div class="flex flex-1 flex-col overflow-hidden text-left leading-tight">
-                        <span class="truncate text-xs font-medium text-sidebar-foreground">Administrator</span>
-                        <span class="truncate text-[11px] text-muted-foreground">admin@banksampah.id</span>
-                    </div>
+                    <form action="{{ route('admin.logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" title="Keluar / Logout" class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+                            <i data-lucide="log-out" class="h-4 w-4"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
         </aside>
@@ -245,57 +262,53 @@
 
                     <!-- Breadcrumb Nav -->
                     <nav aria-label="Breadcrumb" class="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                        <span class="hover:text-foreground transition-colors">Sistem</span>
+                        <span class="hover:text-foreground transition-colors">Admin</span>
                         <i data-lucide="chevron-right" class="h-3.5 w-3.5"></i>
                         <span class="font-medium text-foreground">@yield('title', 'Dashboard')</span>
                     </nav>
                 </div>
 
                 <!-- Right Actions -->
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
+                    <!-- User Badge -->
+                    <div class="flex items-center gap-2 px-2.5 py-1 rounded-md border border-input bg-card text-xs font-medium">
+                        <span class="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px]">A</span>
+                        <span class="text-foreground hidden sm:inline-block">{{ Auth::user()->name ?? 'Admin' }}</span>
+                    </div>
+
                     <!-- Theme Toggle -->
                     <button type="button" onclick="toggleTheme()" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" title="Ganti Tema">
                         <i data-lucide="sun" class="h-4 w-4 hidden dark:block"></i>
                         <i data-lucide="moon" class="h-4 w-4 block dark:hidden"></i>
                     </button>
-
-                    <!-- User Dropdown Toggle -->
-                    <div class="relative">
-                        <button type="button" onclick="toggleDropdown('user-dropdown')" class="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-2.5 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground">
-                            <span class="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold">A</span>
-                            <span class="hidden md:inline-block">Admin</span>
-                            <i data-lucide="chevron-down" class="h-3.5 w-3.5 text-muted-foreground"></i>
-                        </button>
-
-                        <!-- Minimal Dropdown Menu -->
-                        <div id="user-dropdown" class="absolute right-0 mt-1 hidden w-48 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md z-50">
-                            <div class="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Akun Saya</div>
-                            <div class="h-px bg-border my-1"></div>
-                            <a href="#" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground transition-colors">
-                                <i data-lucide="user" class="h-3.5 w-3.5"></i> Profil
-                            </a>
-                            <a href="#" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground transition-colors">
-                                <i data-lucide="settings" class="h-3.5 w-3.5"></i> Pengaturan
-                            </a>
-                            <div class="h-px bg-border my-1"></div>
-                            <a href="#" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 transition-colors">
-                                <i data-lucide="log-out" class="h-3.5 w-3.5"></i> Keluar
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </header>
 
-            <!-- Main Content -->
+            <!-- Main Content Area -->
             <main class="flex-1 p-4 md:p-6 lg:p-8">
-                <div class="mx-auto max-w-7xl">
+                <!-- Flash Alerts (Shadcn Alert Component) -->
+                @if (session('success'))
+                    <div class="mb-6 flex items-start gap-3 rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/30 p-4 text-emerald-900 dark:text-emerald-200 shadow-xs">
+                        <i data-lucide="check-circle" class="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0"></i>
+                        <div class="text-sm font-medium">{{ session('success') }}</div>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="mb-6 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive shadow-xs">
+                        <i data-lucide="alert-circle" class="h-5 w-5 text-destructive mt-0.5 shrink-0"></i>
+                        <div class="text-sm font-medium">{{ session('error') }}</div>
+                    </div>
+                @endif
+
+                <div class="w-full">
                     @yield('content')
                 </div>
             </main>
 
             <!-- Footer (Clean Shadcn Footer) -->
             <footer class="border-t border-border bg-background py-4 px-6 text-xs text-muted-foreground">
-                <div class="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-2">
+                <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-2">
                     <div>
                         &copy; {{ date('Y') }} <span class="font-medium text-foreground">Sistem Manajemen Sampah</span>. Seluruh hak cipta dilindungi.
                     </div>
@@ -329,7 +342,7 @@
             }
         }
 
-        // Theme Toggle (Light / Dark)
+        // Theme Toggle (Dark/Light Mode)
         function toggleTheme() {
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
@@ -339,22 +352,7 @@
                 localStorage.setItem('theme', 'dark');
             }
         }
-
-        // Dropdown Toggle
-        function toggleDropdown(id) {
-            const dropdown = document.getElementById(id);
-            dropdown.classList.toggle('hidden');
-        }
-
-        // Close dropdown when clicked outside
-        document.addEventListener('click', (e) => {
-            const userDropdown = document.getElementById('user-dropdown');
-            if (userDropdown && !userDropdown.contains(e.target) && !e.target.closest('button[onclick*="user-dropdown"]')) {
-                userDropdown.classList.add('hidden');
-            }
-        });
     </script>
-
     @stack('scripts')
 </body>
 </html>
