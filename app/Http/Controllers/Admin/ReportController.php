@@ -20,15 +20,20 @@ class ReportController extends Controller
     public function index(Request $request): View
     {
         $filters = $request->only(['search', 'category_id', 'status', 'urgency', 'start_date', 'end_date']);
+        if ($request->user()->hasRole('user')) {
+            $filters['user_id'] = $request->user()->id;
+        }
+
         $reports = $this->reportService->getFilteredReports($filters, 15);
         $categories = WasteCategory::all();
 
         return view('admin.reports.index', compact('reports', 'categories', 'filters'));
     }
 
-    public function show(int $id): JsonResponse
+    public function show(int $id, Request $request): JsonResponse
     {
-        $result = $this->reportService->getReportDetail($id);
+        $userId = $request->user()->hasRole('user') ? $request->user()->id : null;
+        $result = $this->reportService->getReportDetail($id, $userId);
         if (! $result->isSuccess()) {
             return response()->json(['success' => false, 'message' => $result->message], 404);
         }
@@ -50,6 +55,18 @@ class ReportController extends Controller
             $request->user(),
             $request->input('notes')
         );
+
+        if (! $result->isSuccess()) {
+            return back()->with('error', $result->message);
+        }
+
+        return back()->with('success', $result->message);
+    }
+
+    public function destroy(int $id, Request $request): RedirectResponse
+    {
+        $report = Report::findOrFail($id);
+        $result = $this->reportService->deleteReport($report, $request->user());
 
         if (! $result->isSuccess()) {
             return back()->with('error', $result->message);

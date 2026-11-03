@@ -15,7 +15,6 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             WasteCategorySeeder::class,
             AdminUserSeeder::class,
-            ReportSeeder::class,
         ]);
     }
 }

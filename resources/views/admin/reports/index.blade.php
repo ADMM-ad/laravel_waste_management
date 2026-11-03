@@ -7,8 +7,8 @@
     <!-- Header -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-foreground">Daftar Laporan Sampah</h1>
-            <p class="text-sm text-muted-foreground">Kelola laporan masyarakat, pantau deteksi AI, dan perbarui status penanganan.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ Auth::user()->hasRole('user') ? 'Laporan Sampah Saya' : 'Daftar Laporan Sampah' }}</h1>
+            <p class="text-sm text-muted-foreground">{{ Auth::user()->hasRole('user') ? 'Pantau perkembangan dan status penanganan laporan sampah yang Anda ajukan.' : 'Kelola laporan masyarakat, pantau deteksi AI, dan perbarui status penanganan.' }}</p>
         </div>
     </div>
 
@@ -22,8 +22,8 @@
                        class="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-xs shadow-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring">
             </div>
 
-            <!-- Category Filter -->
-            <select name="category_id" class="rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus:outline-none">
+            <!-- Category Filter (Searchable TomSelect) -->
+            <select name="category_id" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari Kategori...">
                 <option value="all">Semua Kategori</option>
                 @foreach ($categories as $cat)
                     <option value="{{ $cat->id }}" {{ ($filters['category_id'] ?? '') == $cat->id ? 'selected' : '' }}>
@@ -32,8 +32,8 @@
                 @endforeach
             </select>
 
-            <!-- Status Filter -->
-            <select name="status" class="rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus:outline-none">
+            <!-- Status Filter (Searchable TomSelect) -->
+            <select name="status" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari Status...">
                 <option value="all">Semua Status</option>
                 <option value="pending" {{ ($filters['status'] ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="in_progress" {{ ($filters['status'] ?? '') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
@@ -47,11 +47,10 @@
                     <i data-lucide="filter" class="h-3.5 w-3.5"></i>
                     <span>Filter</span>
                 </button>
-                @if (!empty($filters['search']) || (!empty($filters['category_id']) && $filters['category_id'] !== 'all') || (!empty($filters['status']) && $filters['status'] !== 'all'))
-                    <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center justify-center rounded-md border border-input bg-background p-2 text-muted-foreground hover:bg-accent transition-colors" title="Reset Filter">
-                        <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>
-                    </a>
-                @endif
+                <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center justify-center gap-1.5 rounded-md border border-input bg-background py-2 px-3 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Bersihkan Filter">
+                    <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>
+                    <span>Reset</span>
+                </a>
             </div>
         </form>
     </div>
@@ -124,11 +123,22 @@
                                 @endif
                             </td>
                             <td class="px-5 py-4 text-right">
-                                <button type="button" onclick="openDetailModal({{ $report->id }})"
-                                        class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
-                                    <i data-lucide="eye" class="h-3.5 w-3.5"></i>
-                                    <span>Detail</span>
-                                </button>
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button type="button" onclick="openDetailModal({{ $report->id }})"
+                                            class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                                        <i data-lucide="eye" class="h-3.5 w-3.5"></i>
+                                        <span>Detail</span>
+                                    </button>
+
+                                    @if (Auth::user()->hasRole('admin'))
+                                        <button type="button"
+                                                onclick="openDeleteConfirmationModal('{{ route('admin.reports.destroy', $report->id) }}', 'Hapus Laporan {{ $report->tracking_code }}', 'Apakah Anda yakin ingin menghapus data laporan ini? Data laporan akan diarsipkan dan tidak lagi muncul di daftar aktif.')"
+                                                class="inline-flex items-center justify-center rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                                title="Hapus Laporan">
+                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                        </button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -224,45 +234,95 @@
                     </div>
                 </div>
 
-                <!-- Status Update Form -->
-                <form id="statusUpdateForm" method="POST" action="" class="border-t border-border pt-4 space-y-3">
-                    @csrf
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-foreground">Perbarui Status Penanganan:</span>
-                        <span id="terminalNotice" class="hidden text-xs text-destructive font-medium">Status sudah final (tidak dapat diubah)</span>
-                    </div>
-
-                    <div class="grid sm:grid-cols-2 gap-3" id="formInputsContainer">
-                        <div>
-                            <select id="statusSelect" name="status" onchange="handleStatusChange(this.value)"
-                                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus:outline-none">
-                                <option value="pending">Pending</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
+                @if (Auth::user()->hasRole('admin'))
+                    <!-- Status Update Form (Admin Only) -->
+                    <form id="statusUpdateForm" method="POST" action="" class="border-t border-border pt-4 space-y-3">
+                        @csrf
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-foreground">Perbarui Status Penanganan:</span>
+                            <span id="terminalNotice" class="hidden text-xs text-destructive font-medium">Status sudah final (tidak dapat diubah)</span>
                         </div>
-                        <div>
-                            <button type="submit" id="btnUpdateStatus" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-primary py-2 px-4 text-xs font-medium text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
-                                <i data-lucide="save" class="h-3.5 w-3.5"></i>
-                                <span>Simpan Status</span>
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Rejection note textarea (required if rejected) -->
-                    <div id="rejectionNoteField" class="hidden space-y-1">
-                        <label for="modalNotes" class="text-xs font-medium text-destructive">Alasan Penolakan Laporan (Wajib diisi min. 5 karakter):</label>
-                        <textarea id="modalNotes" name="notes" rows="2" placeholder="Tuliskan alasan spesifik mengapa laporan ditolak..."
-                                  class="w-full rounded-md border border-destructive/40 bg-background p-2.5 text-xs shadow-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-destructive"></textarea>
-                    </div>
-                </form>
+                        <div class="grid sm:grid-cols-2 gap-3" id="formInputsContainer">
+                            <div>
+                                <select id="statusSelect" name="status" onchange="handleStatusChange(this.value)"
+                                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus:outline-none">
+                                    <option value="pending">Pending</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button type="submit" id="btnUpdateStatus" class="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-primary py-2 px-4 text-xs font-medium text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
+                                    <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                                    <span>Simpan Status</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Rejection note textarea (required if rejected) -->
+                        <div id="rejectionNoteField" class="hidden space-y-1">
+                            <label for="modalNotes" class="text-xs font-medium text-destructive">Alasan Penolakan Laporan (Wajib diisi min. 5 karakter):</label>
+                            <textarea id="modalNotes" name="notes" rows="2" placeholder="Tuliskan alasan spesifik mengapa laporan ditolak..."
+                                      class="w-full rounded-md border border-destructive/40 bg-background p-2.5 text-xs shadow-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-destructive"></textarea>
+                        </div>
+                    </form>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
+<!-- Custom Delete Confirmation Modal (Shadcn Alert Dialog Style) -->
+<div id="deleteConfirmModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" onclick="closeDeleteConfirmationModal()"></div>
+    <div class="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl text-card-foreground">
+        <div class="flex items-start gap-4">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <i data-lucide="alert-triangle" class="h-6 w-6"></i>
+            </div>
+            <div class="flex-1 space-y-1">
+                <h3 class="text-base font-bold text-foreground tracking-tight" id="deleteModalTitle">Konfirmasi Hapus</h3>
+                <p class="text-xs text-muted-foreground leading-relaxed" id="deleteModalMessage">Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+        </div>
+
+        <form id="deleteConfirmForm" method="POST" action="" class="mt-6 flex items-center justify-end gap-2.5">
+            @csrf
+            @method('DELETE')
+            <button type="button" onclick="closeDeleteConfirmationModal()"
+                    class="rounded-lg border border-input bg-background px-4 py-2 text-xs font-medium text-foreground shadow-xs hover:bg-accent transition-colors">
+                Batal
+            </button>
+            <button type="submit"
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-destructive px-4 py-2 text-xs font-semibold text-destructive-foreground shadow-xs hover:bg-destructive/90 transition-colors">
+                <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                <span>Ya, Hapus Data</span>
+            </button>
+        </form>
+    </div>
+</div>
+
 <script>
+    function openDeleteConfirmationModal(actionUrl, title, message) {
+        const modal = document.getElementById('deleteConfirmModal');
+        const form = document.getElementById('deleteConfirmForm');
+        const titleEl = document.getElementById('deleteModalTitle');
+        const msgEl = document.getElementById('deleteModalMessage');
+
+        form.action = actionUrl;
+        titleEl.innerText = title;
+        msgEl.innerText = message;
+
+        modal.classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeDeleteConfirmationModal() {
+        document.getElementById('deleteConfirmModal').classList.add('hidden');
+    }
+
     function openDetailModal(id) {
         const modal = document.getElementById('detailModal');
         const loading = document.getElementById('modalLoading');
@@ -314,30 +374,32 @@
                     logsContainer.innerHTML = '<span class="text-xs text-muted-foreground">Belum ada riwayat status.</span>';
                 }
 
-                // Status form setup
+                // Status form setup (Admin only)
                 const form = document.getElementById('statusUpdateForm');
-                form.action = `{{ url('/admin/reports') }}/${r.id}/status`;
+                if (form) {
+                    form.action = `{{ url('/admin/reports') }}/${r.id}/status`;
 
-                const select = document.getElementById('statusSelect');
-                select.value = r.status;
+                    const select = document.getElementById('statusSelect');
+                    select.value = r.status;
 
-                const isTerminal = ['completed', 'rejected'].includes(r.status);
-                const terminalNotice = document.getElementById('terminalNotice');
-                const btnUpdate = document.getElementById('btnUpdateStatus');
+                    const isTerminal = ['completed', 'rejected'].includes(r.status);
+                    const terminalNotice = document.getElementById('terminalNotice');
+                    const btnUpdate = document.getElementById('btnUpdateStatus');
 
-                if (isTerminal) {
-                    select.disabled = true;
-                    btnUpdate.disabled = true;
-                    btnUpdate.classList.add('opacity-50', 'cursor-not-allowed');
-                    terminalNotice.classList.remove('hidden');
-                } else {
-                    select.disabled = false;
-                    btnUpdate.disabled = false;
-                    btnUpdate.classList.remove('opacity-50', 'cursor-not-allowed');
-                    terminalNotice.classList.add('hidden');
+                    if (isTerminal) {
+                        select.disabled = true;
+                        btnUpdate.disabled = true;
+                        btnUpdate.classList.add('opacity-50', 'cursor-not-allowed');
+                        terminalNotice.classList.remove('hidden');
+                    } else {
+                        select.disabled = false;
+                        btnUpdate.disabled = false;
+                        btnUpdate.classList.remove('opacity-50', 'cursor-not-allowed');
+                        terminalNotice.classList.add('hidden');
+                    }
+
+                    handleStatusChange(r.status);
                 }
-
-                handleStatusChange(r.status);
 
                 loading.classList.add('hidden');
                 content.classList.remove('hidden');

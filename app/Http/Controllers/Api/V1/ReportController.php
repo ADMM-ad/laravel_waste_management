@@ -56,6 +56,22 @@ class ReportController extends Controller
             'address' => 'required|string',
             'scale' => 'required|in:small,medium,large',
             'urgency' => 'required|in:low,medium,high',
+        ], [
+            'photo.required' => 'Foto sampah wajib diunggah.',
+            'photo.file' => 'Berkas foto tidak valid.',
+            'photo.mimes' => 'Format foto harus berupa jpeg, jpg, png, atau webp.',
+            'photo.max' => 'Ukuran foto maksimal adalah 5MB.',
+            'category_id.required' => 'Kategori sampah wajib dipilih.',
+            'category_id.exists' => 'Kategori sampah yang dipilih tidak valid.',
+            'description.required' => 'Deskripsi laporan wajib diisi.',
+            'description.min' => 'Deskripsi laporan minimal 10 karakter.',
+            'latitude.required' => 'Titik koordinat latitude wajib terdeteksi.',
+            'longitude.required' => 'Titik koordinat longitude wajib terdeteksi.',
+            'address.required' => 'Alamat lokasi laporan wajib diisi.',
+            'scale.required' => 'Skala volume sampah wajib dipilih.',
+            'scale.in' => 'Skala volume harus berupa small, medium, atau large.',
+            'urgency.required' => 'Tingkat urgensi laporan wajib dipilih.',
+            'urgency.in' => 'Tingkat urgensi harus berupa low, medium, atau high.',
         ]);
 
         if ($validator->fails()) {

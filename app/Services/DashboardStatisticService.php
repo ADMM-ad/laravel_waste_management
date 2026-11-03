@@ -3,19 +3,24 @@
 namespace App\Services;
 
 use App\Models\Report;
+use App\Models\ReportStatusLog;
 use App\Models\User;
-use App\Models\WasteCategory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DashboardStatisticService
 {
     /**
-     * Compute dashboard analytics metrics, trend line, and category breakdown.
+     * Compute dashboard analytics metrics, trend line, urgency breakdown, scale breakdown, and recent status logs.
      */
-    public function getStatistics(array $filters = []): array
+    public function getStatistics(array $filters = [], ?User $currentUser = null): array
     {
+        $isCitizen = $currentUser && $currentUser->hasRole('user');
         $reportQuery = Report::query();
+
+        if ($isCitizen) {
+            $reportQuery->where('user_id', $currentUser->id);
+        }
 
         if (! empty($filters['category_id']) && $filters['category_id'] !== 'all') {
             $reportQuery->where('category_id', $filters['category_id']);
@@ -35,7 +40,7 @@ class DashboardStatisticService
         $totalInProgress = (clone $reportQuery)->where('status', 'in_progress')->count();
         $totalCompleted = (clone $reportQuery)->where('status', 'completed')->count();
         $totalRejected = (clone $reportQuery)->where('status', 'rejected')->count();
-        $totalUsers = User::role('user')->count();
+        $totalUsers = $isCitizen ? $totalCompleted : User::role('user')->count();
 
         // 2. 30 Days Trend Line
         $trendData = [];
@@ -50,7 +55,12 @@ class DashboardStatisticService
             ? "strftime('%Y-%m-%d', created_at)"
             : "DATE_FORMAT(created_at, '%Y-%m-%d')";
 
-        $recentReports = Report::where('created_at', '>=', $startDate30Days)
+        $recentTrendQuery = Report::where('created_at', '>=', $startDate30Days);
+        if ($isCitizen) {
+            $recentTrendQuery->where('user_id', $currentUser->id);
+        }
+
+        $recentReports = $recentTrendQuery
             ->select(DB::raw("$dateExpression as date"), DB::raw('count(*) as count'))
             ->groupBy('date')
             ->pluck('count', 'date')
@@ -62,25 +72,38 @@ class DashboardStatisticService
             }
         }
 
-        // 3. Category Distribution (Donut Chart)
-        $categories = WasteCategory::withCount(['reports' => function ($q) use ($filters) {
-            if (! empty($filters['start_date'])) {
-                $q->whereDate('created_at', '>=', $filters['start_date']);
-            }
-            if (! empty($filters['end_date'])) {
-                $q->whereDate('created_at', '<=', $filters['end_date']);
-            }
-        }])->get();
+        // 3. Urgency Distribution (Donut Chart)
+        $urgencyQuery = clone $reportQuery;
+        $urgencyDistribution = [
+            'labels' => ['Tinggi', 'Sedang', 'Rendah'],
+            'values' => [
+                (clone $urgencyQuery)->where('urgency', 'high')->count(),
+                (clone $urgencyQuery)->where('urgency', 'medium')->count(),
+                (clone $urgencyQuery)->where('urgency', 'low')->count(),
+            ],
+            'colors' => ['#DC2626', '#D97706', '#64748B'],
+        ];
 
-        $categoryDistribution = $categories->map(function ($cat) {
-            return [
-                'id' => $cat->id,
-                'name' => $cat->name,
-                'count' => $cat->reports_count,
-            ];
-        });
+        // 4. Scale / Volume Breakdown
+        $scaleDistribution = [
+            'large' => (clone $urgencyQuery)->where('scale', 'large')->count(),
+            'medium' => (clone $urgencyQuery)->where('scale', 'medium')->count(),
+            'small' => (clone $urgencyQuery)->where('scale', 'small')->count(),
+        ];
+
+        // 5. Recent Status Logs (Penanganan Sampah Terbaru)
+        $statusLogsQuery = ReportStatusLog::with(['report', 'changedByUser'])
+            ->latest('created_at')
+            ->limit(5);
+
+        if ($isCitizen) {
+            $statusLogsQuery->whereHas('report', fn($q) => $q->where('user_id', $currentUser->id));
+        }
+
+        $recentStatusLogs = $statusLogsQuery->get();
 
         return [
+            'is_citizen' => $isCitizen,
             'metrics' => [
                 'total_reports' => $totalReports,
                 'total_pending' => $totalPending,
@@ -93,7 +116,9 @@ class DashboardStatisticService
                 'labels' => array_keys($trendData),
                 'values' => array_values($trendData),
             ],
-            'category_distribution' => $categoryDistribution,
+            'urgency_distribution' => $urgencyDistribution,
+            'scale_distribution' => $scaleDistribution,
+            'recent_status_logs' => $recentStatusLogs,
         ];
     }
 }

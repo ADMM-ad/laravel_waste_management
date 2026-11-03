@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ReportService
@@ -30,9 +31,9 @@ class ReportService
         }
 
         try {
-            // 2. Store photo with unique uuid
+            // 2. Store photo with unique uuid and auto-compression
             $fileName = Str::uuid() . '.' . $extension;
-            $photoPath = $photo->storeAs('reports', $fileName, 'public');
+            $photoPath = $this->compressAndStorePhoto($photo, $fileName);
 
             // 3. Generate unique tracking code: SWM-YYYYMMDD-XXXXX
             do {
@@ -197,5 +198,101 @@ class ReportService
         }
 
         return ServiceResult::success($report, 'Detail laporan ditemukan.');
+    }
+
+    /**
+     * Soft delete a waste report (Admin only).
+     */
+    public function deleteReport(Report $report, User $currentUser): ServiceResult
+    {
+        if (! $currentUser->hasRole('admin')) {
+            return ServiceResult::error('Hanya Administrator yang memiliki wewenang menghapus laporan.', 403);
+        }
+
+        try {
+            $trackingCode = $report->tracking_code;
+            $report->delete();
+
+            return ServiceResult::success(null, "Laporan {$trackingCode} berhasil dihapus.");
+        } catch (\Throwable $e) {
+            return ServiceResult::error('Gagal menghapus laporan: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Auto-resize and compress uploaded photo to ensure it stays lightweight and under storage limits.
+     */
+    private function compressAndStorePhoto(UploadedFile $photo, string $fileName): string
+    {
+        $extension = strtolower($photo->getClientOriginalExtension());
+        $path = "reports/{$fileName}";
+
+        if (extension_loaded('gd')) {
+            try {
+                $imagePath = $photo->getRealPath();
+                $image = null;
+
+                switch ($extension) {
+                    case 'jpeg':
+                    case 'jpg':
+                        $image = @imagecreatefromjpeg($imagePath);
+                        break;
+                    case 'png':
+                        $image = @imagecreatefrompng($imagePath);
+                        break;
+                    case 'webp':
+                        if (function_exists('imagecreatefromwebp')) {
+                            $image = @imagecreatefromwebp($imagePath);
+                        }
+                        break;
+                }
+
+                if ($image !== null && $image !== false) {
+                    $width = imagesx($image);
+                    $height = imagesy($image);
+                    $maxDimension = 1600;
+
+                    // Resize proportionally if larger than maxDimension
+                    if ($width > $maxDimension || $height > $maxDimension) {
+                        if ($width > $height) {
+                            $newWidth = $maxDimension;
+                            $newHeight = (int) round(($height / $width) * $maxDimension);
+                        } else {
+                            $newHeight = $maxDimension;
+                            $newWidth = (int) round(($width / $height) * $maxDimension);
+                        }
+
+                        $resized = imagecreatetruecolor($newWidth, $newHeight);
+                        if ($extension === 'png') {
+                            imagealphablending($resized, false);
+                            imagesavealpha($resized, true);
+                        }
+                        imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                        imagedestroy($image);
+                        $image = $resized;
+                    }
+
+                    ob_start();
+                    if ($extension === 'png') {
+                        imagepng($image, null, 6);
+                    } elseif ($extension === 'webp' && function_exists('imagewebp')) {
+                        imagewebp($image, null, 80);
+                    } else {
+                        imagejpeg($image, null, 80);
+                    }
+                    $compressedData = ob_get_clean();
+                    imagedestroy($image);
+
+                    if ($compressedData !== false && strlen($compressedData) > 0) {
+                        Storage::disk('public')->put($path, $compressedData);
+                        return $path;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Fallback to default storage if GD fails
+            }
+        }
+
+        return $photo->storeAs('reports', $fileName, 'public');
     }
 }

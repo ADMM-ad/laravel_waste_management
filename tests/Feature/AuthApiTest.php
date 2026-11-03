@@ -81,6 +81,28 @@ class AuthApiTest extends TestCase
             ->assertJson(['success' => false]);
     }
 
+    public function test_admin_is_forbidden_from_mobile_api_login(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Boss',
+            'email' => 'admin_super',
+            'password' => Hash::make('secret123'),
+            'is_active' => true,
+        ]);
+        $admin->assignRole('admin');
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => 'admin_super',
+            'password' => 'secret123',
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Aplikasi mobile khusus untuk akun Warga (User). Administrator silakan login melalui portal Web Admin.',
+            ]);
+    }
+
     public function test_authenticated_user_can_get_profile(): void
     {
         $user = User::create([

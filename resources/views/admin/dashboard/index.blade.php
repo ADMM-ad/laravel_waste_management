@@ -7,8 +7,8 @@
     <!-- Page Header & Filter Form -->
     <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-foreground">Dashboard Operasional</h1>
-            <p class="text-sm text-muted-foreground">Pemantauan metrik laporan sampah, tren eskalasi, dan distribusi kategori secara real-time.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ $stats['is_citizen'] ? 'Dashboard Warga' : 'Dashboard Operasional' }}</h1>
+            <p class="text-sm text-muted-foreground">{{ $stats['is_citizen'] ? 'Pemantauan status laporan sampah Anda, riwayat penanganan, dan volume kontribusi lingkungan.' : 'Pemantauan metrik laporan sampah, tren eskalasi, dan distribusi kategori secara real-time.' }}</p>
         </div>
 
         <!-- Filter Bar -->
@@ -23,7 +23,7 @@
                 <input type="date" name="end_date" value="{{ $filters['end_date'] ?? '' }}"
                        class="bg-transparent text-foreground focus:outline-none cursor-pointer">
             </div>
-            <select name="category_id" class="rounded-md border border-input bg-card px-2.5 py-1.5 text-xs text-foreground shadow-xs focus:outline-none">
+            <select name="category_id" class="tom-select rounded-md border border-input bg-card text-xs text-foreground shadow-xs" placeholder="Semua Kategori">
                 <option value="all">Semua Kategori</option>
                 @foreach ($categories as $cat)
                     <option value="{{ $cat->id }}" {{ ($filters['category_id'] ?? '') == $cat->id ? 'selected' : '' }}>
@@ -49,14 +49,14 @@
         <!-- Metric 1: Total Reports -->
         <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between pb-2">
-                <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Laporan</span>
+                <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{{ $stats['is_citizen'] ? 'Total Laporan Saya' : 'Total Laporan' }}</span>
                 <div class="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground shrink-0">
                     <i data-lucide="file-text" class="h-4 w-4"></i>
                 </div>
             </div>
             <div>
                 <div class="text-2xl font-bold tracking-tight text-foreground">{{ number_format($stats['metrics']['total_reports']) }}</div>
-                <p class="text-[11px] text-muted-foreground mt-1">Keseluruhan laporan warga</p>
+                <p class="text-[11px] text-muted-foreground mt-1">{{ $stats['is_citizen'] ? 'Semua laporan Anda' : 'Keseluruhan laporan warga' }}</p>
             </div>
         </div>
 
@@ -116,17 +116,17 @@
             </div>
         </div>
 
-        <!-- Metric 6: Users -->
+        <!-- Metric 6: Users / Laporan Selesai -->
         <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between pb-2">
-                <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Warga</span>
+                <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{{ $stats['is_citizen'] ? 'Laporan Ditangani' : 'Total Warga' }}</span>
                 <div class="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground shrink-0">
-                    <i data-lucide="users" class="h-4 w-4"></i>
+                    <i data-lucide="{{ $stats['is_citizen'] ? 'check-check' : 'users' }}" class="h-4 w-4"></i>
                 </div>
             </div>
             <div>
                 <div class="text-2xl font-bold tracking-tight text-foreground">{{ number_format($stats['metrics']['total_users']) }}</div>
-                <p class="text-[11px] text-muted-foreground mt-1">Akun warga aktif</p>
+                <p class="text-[11px] text-muted-foreground mt-1">{{ $stats['is_citizen'] ? 'Laporan berhasil diselesaikan' : 'Akun warga aktif' }}</p>
             </div>
         </div>
     </div>
@@ -150,25 +150,113 @@
             </div>
         </div>
 
-        <!-- Category Distribution Donut Chart -->
+        <!-- Urgency Distribution Donut Chart & Scale Summary -->
         <div class="rounded-xl border border-border bg-card p-6 shadow-xs flex flex-col justify-between">
             <div>
                 <div class="pb-4 border-b border-border mb-4">
-                    <h3 class="font-semibold tracking-tight text-foreground">Distribusi Jenis Sampah</h3>
-                    <p class="text-xs text-muted-foreground">Proporsi kategori sampah berdasarkan AI & kurasi.</p>
+                    <h3 class="font-semibold tracking-tight text-foreground">Sebaran Urgensi Laporan</h3>
+                    <p class="text-xs text-muted-foreground">Prioritas penanganan laporan berdasarkan tingkat urgensi.</p>
                 </div>
-                <div class="h-60 w-full flex items-center justify-center relative">
-                    <canvas id="categoryChart"></canvas>
+                <div class="h-52 w-full flex items-center justify-center relative">
+                    <canvas id="urgencyChart"></canvas>
                 </div>
             </div>
-            <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs border-t border-border pt-4">
-                @foreach ($stats['category_distribution'] as $cat)
-                    <div class="p-1.5 rounded-lg bg-muted/40">
-                        <span class="text-muted-foreground block text-[11px] font-medium truncate">{{ $cat['name'] }}</span>
-                        <span class="font-bold text-foreground text-sm mt-0.5 block">{{ $cat['count'] }}</span>
+            
+            <div class="mt-4 border-t border-border pt-4">
+                <span class="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Estimasi Volume Sampah</span>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="p-2 rounded-lg bg-muted/40 border border-border/50">
+                        <span class="text-muted-foreground block text-[11px] font-medium">Besar</span>
+                        <span class="font-bold text-foreground text-sm mt-0.5 block">{{ $stats['scale_distribution']['large'] }}</span>
                     </div>
-                @endforeach
+                    <div class="p-2 rounded-lg bg-muted/40 border border-border/50">
+                        <span class="text-muted-foreground block text-[11px] font-medium">Sedang</span>
+                        <span class="font-bold text-foreground text-sm mt-0.5 block">{{ $stats['scale_distribution']['medium'] }}</span>
+                    </div>
+                    <div class="p-2 rounded-lg bg-muted/40 border border-border/50">
+                        <span class="text-muted-foreground block text-[11px] font-medium">Kecil</span>
+                        <span class="font-bold text-foreground text-sm mt-0.5 block">{{ $stats['scale_distribution']['small'] }}</span>
+                    </div>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Recent Status Logs (Aktivitas Penanganan Sampah) -->
+    <div class="mt-6 rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+        <div class="flex items-center justify-between p-6 border-b border-border">
+            <div>
+                <h3 class="font-semibold tracking-tight text-foreground">Aktivitas Penanganan Sampah Terbaru</h3>
+                <p class="text-xs text-muted-foreground mt-0.5">Catatan riwayat pembaruan status laporan sampah terkini oleh petugas.</p>
+            </div>
+            <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+                <span>Lihat Semua Laporan</span>
+                <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-muted/50 text-xs uppercase text-muted-foreground border-b border-border">
+                    <tr>
+                        <th class="px-6 py-3 font-semibold">Laporan</th>
+                        <th class="px-6 py-3 font-semibold">Petugas</th>
+                        <th class="px-6 py-3 font-semibold">Perubahan Status</th>
+                        <th class="px-6 py-3 font-semibold">Catatan Tindakan</th>
+                        <th class="px-6 py-3 font-semibold">Waktu</th>
+                        <th class="px-6 py-3 font-semibold text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    @forelse ($stats['recent_status_logs'] as $log)
+                        <tr class="hover:bg-muted/30 transition-colors">
+                            <td class="px-6 py-4 font-mono font-medium text-xs text-foreground">
+                                {{ $log->report ? $log->report->tracking_code : '#' . $log->report_id }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="font-medium text-foreground text-xs">{{ $log->changedByUser->name ?? 'Sistem' }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="inline-flex items-center gap-1.5 text-xs">
+                                    <span class="rounded bg-muted px-2 py-0.5 font-medium text-muted-foreground">{{ ucfirst($log->from_status ?? 'Baru') }}</span>
+                                    <i data-lucide="arrow-right" class="h-3 w-3 text-muted-foreground"></i>
+                                    @if ($log->to_status === 'pending')
+                                        <span class="rounded bg-amber-500/10 text-amber-700 px-2 py-0.5 font-semibold">Pending</span>
+                                    @elseif ($log->to_status === 'in_progress')
+                                        <span class="rounded bg-blue-500/10 text-blue-700 px-2 py-0.5 font-semibold">In Progress</span>
+                                    @elseif ($log->to_status === 'completed')
+                                        <span class="rounded bg-emerald-500/10 text-emerald-700 px-2 py-0.5 font-semibold">Completed</span>
+                                    @else
+                                        <span class="rounded bg-rose-500/10 text-rose-700 px-2 py-0.5 font-semibold">Rejected</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-xs text-muted-foreground max-w-xs truncate">
+                                {{ $log->notes ?: '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-xs text-muted-foreground whitespace-nowrap">
+                                {{ $log->created_at ? $log->created_at->diffForHumans() : '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                @if ($log->report)
+                                    <a href="{{ route('admin.reports.index', ['search' => $log->report->tracking_code]) }}"
+                                       class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium shadow-xs hover:bg-accent transition-colors">
+                                        <i data-lucide="external-link" class="h-3 w-3"></i>
+                                        <span>Buka</span>
+                                    </a>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-10 text-sm text-muted-foreground">
+                                <i data-lucide="inbox" class="h-7 w-7 mx-auto mb-2 opacity-40"></i>
+                                Belum ada riwayat aktivitas penanganan laporan.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -221,20 +309,21 @@
             });
         }
 
-        // Donut Chart
-        const catCanvas = document.getElementById('categoryChart');
-        if (catCanvas) {
-            const catCtx = catCanvas.getContext('2d');
-            const catLabels = @json($stats['category_distribution']->pluck('name'));
-            const catCounts = @json($stats['category_distribution']->pluck('count'));
+        // Urgency Donut Chart
+        const urgencyCanvas = document.getElementById('urgencyChart');
+        if (urgencyCanvas) {
+            const urgencyCtx = urgencyCanvas.getContext('2d');
+            const urgencyLabels = @json($stats['urgency_distribution']['labels']);
+            const urgencyValues = @json($stats['urgency_distribution']['values']);
+            const urgencyColors = @json($stats['urgency_distribution']['colors']);
 
-            new Chart(catCtx, {
+            new Chart(urgencyCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: catLabels,
+                    labels: urgencyLabels,
                     datasets: [{
-                        data: catCounts,
-                        backgroundColor: ['#16a34a', '#2563eb', '#f59e0b'],
+                        data: urgencyValues,
+                        backgroundColor: urgencyColors,
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]

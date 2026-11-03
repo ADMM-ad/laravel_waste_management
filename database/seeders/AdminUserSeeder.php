@@ -10,28 +10,28 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Admin Account
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@banksampah.id'],
+        // 1. Admin Account (Username: admin, Password: 12345678)
+        $admin = User::updateOrCreate(
+            ['email' => 'admin'],
             [
-                'name' => 'Administrator Bank Sampah',
-                'password' => Hash::make('password123'),
+                'name' => 'Administrator',
+                'password' => Hash::make('12345678'),
                 'phone_number' => '081234567890',
                 'is_active' => true,
             ]
         );
         $admin->syncRoles(['admin']);
 
-        // 2. Sample Citizen / Mobile User Account
-        $citizen = User::firstOrCreate(
-            ['email' => 'warga@banksampah.id'],
+        // 2. Regular User Account (Username: user, Password: 12345678)
+        $user = User::updateOrCreate(
+            ['email' => 'user'],
             [
-                'name' => 'Budi Santoso',
-                'password' => Hash::make('password123'),
+                'name' => 'Pengguna Warga',
+                'password' => Hash::make('12345678'),
                 'phone_number' => '089876543210',
                 'is_active' => true,
             ]
         );
-        $citizen->syncRoles(['user']);
+        $user->syncRoles(['user']);
     }
 }

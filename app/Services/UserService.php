@@ -40,6 +40,10 @@ class UserService
             return ServiceResult::error('Anda tidak dapat menonaktifkan akun Anda sendiri.', 422);
         }
 
+        if ($user->hasRole('admin')) {
+            return ServiceResult::error('Anda tidak dapat mengubah status akun Administrator.', 403);
+        }
+
         $user->is_active = ! $user->is_active;
         $user->save();
 
@@ -54,6 +58,10 @@ class UserService
     {
         if ($user->id === $currentUser->id) {
             return ServiceResult::error('Anda tidak dapat menghapus akun Anda sendiri.', 422);
+        }
+
+        if ($user->hasRole('admin')) {
+            return ServiceResult::error('Anda tidak dapat menghapus akun Administrator.', 403);
         }
 
         $user->delete();

@@ -20,6 +20,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth & Profile
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
+    Route::put('/auth/profile', [AuthController::class, 'updateProfile'])->name('api.auth.profile.update');
+    Route::put('/auth/password', [AuthController::class, 'updatePassword'])->name('api.auth.password.update');
 
     // Categories
     Route::get('/categories', [WasteCategoryController::class, 'index'])->name('api.categories.index');

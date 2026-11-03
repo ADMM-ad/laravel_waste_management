@@ -49,15 +49,16 @@ class AuthService
         $user = User::where('email', $email)->first();
 
         if (! $user || ! Hash::check($password, $user->password)) {
-            return ServiceResult::error('Kredensial email atau password tidak sesuai.', 401, ['credentials' => ['Email atau password salah']]);
+            return ServiceResult::error('Username atau kata sandi tidak cocok.', 401, ['credentials' => ['Username atau kata sandi salah']]);
         }
 
         if (! $user->is_active) {
             return ServiceResult::error('Akses login ditolak. Akun Anda telah dinonaktifkan.', 403, ['account' => ['Akun tidak aktif']]);
         }
 
-        if (! $user->hasRole('user') && ! $user->hasRole('admin')) {
-            return ServiceResult::error('Akses tidak diizinkan untuk peran ini.', 403);
+        // Mobile Flutter is strictly for 'user' role only
+        if (! $user->hasRole('user')) {
+            return ServiceResult::error('Aplikasi mobile khusus untuk akun Warga (User). Administrator silakan login melalui portal Web Admin.', 403, ['role' => ['Hanya akun warga yang dapat login di mobile']]);
         }
 
         $token = $user->createToken('mobile_access_token')->plainTextToken;
@@ -75,24 +76,25 @@ class AuthService
     }
 
     /**
-     * Authenticate web admin credentials for web session login.
+     * Authenticate web credentials for web session login (allows admin and user).
      */
     public function loginWeb(string $email, string $password): ServiceResult
     {
         $user = User::where('email', $email)->first();
 
         if (! $user || ! Hash::check($password, $user->password)) {
-            return ServiceResult::error('Email atau kata sandi tidak cocok.', 401, ['credentials' => ['Email atau kata sandi salah']]);
+            return ServiceResult::error('Username atau kata sandi tidak cocok.', 401, ['credentials' => ['Username atau kata sandi salah']]);
         }
 
         if (! $user->is_active) {
             return ServiceResult::error('Akun Anda dinonaktifkan. Hubungi superadmin.', 403, ['account' => ['Akun tidak aktif']]);
         }
 
-        if (! $user->hasRole('admin')) {
-            return ServiceResult::error('Hanya administrator yang diizinkan masuk ke portal admin.', 403, ['role' => ['Akses terbatas untuk admin']]);
+        // Both 'admin' and 'user' can login to web portal
+        if (! $user->hasRole('admin') && ! $user->hasRole('user')) {
+            return ServiceResult::error('Akun Anda tidak memiliki izin untuk masuk ke portal web.', 403, ['role' => ['Akses ditolak']]);
         }
 
-        return ServiceResult::success($user, 'Otentikasi admin berhasil');
+        return ServiceResult::success($user, 'Otentikasi berhasil');
     }
 }
