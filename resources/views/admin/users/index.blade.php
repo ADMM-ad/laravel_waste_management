@@ -123,9 +123,10 @@
                                         <!-- Delete Button -->
                                         <button type="button"
                                                 onclick="openDeleteConfirmationModal('{{ route('admin.users.destroy', $user->id) }}', 'Hapus Pengguna {{ $user->name }}', 'Apakah Anda yakin ingin menghapus data pengguna {{ $user->name }}? Data riwayat laporan yang bersangkutan akan tetap disimpan di sistem.')"
-                                                class="inline-flex items-center justify-center rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                                class="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
                                                 title="Hapus Pengguna">
                                             <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                            <span>Hapus</span>
                                         </button>
                                     </div>
                                 @endif

@@ -100,17 +100,28 @@ class AuthController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
             'phone_number' => 'nullable|string|max:20',
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Email / Username akun wajib diisi.',
+            'email.email' => 'Format email / username tidak valid.',
+            'email.unique' => 'Email / username ini sudah digunakan pengguna lain.',
         ]);
 
         if ($validator->fails()) {
             return $this->jsonResponse(false, 'Validasi update profil gagal.', null, 422, $validator->errors()->toArray());
         }
 
-        $user->update([
+        $payload = [
             'name' => $request->name,
             'phone_number' => $request->phone_number,
-        ]);
+        ];
+        if ($request->filled('email')) {
+            $payload['email'] = $request->email;
+        }
+
+        $user->update($payload);
 
         return $this->jsonResponse(true, 'Profil berhasil diperbarui.', [
             'id' => $user->id,

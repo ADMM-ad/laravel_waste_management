@@ -16,7 +16,16 @@ class DashboardController extends Controller
 
     public function index(Request $request): View
     {
-        $filters = $request->only(['start_date', 'end_date', 'category_id']);
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+        $categoryId = $request->input('category_id');
+
+        $filters = [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'category_id' => $categoryId,
+        ];
+
         $stats = $this->statisticService->getStatistics($filters, $request->user());
         $categories = WasteCategory::all();
 

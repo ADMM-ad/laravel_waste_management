@@ -35,7 +35,13 @@ Route::middleware(['auth', 'role:admin|user'])->prefix('admin')->group(function 
 
     // Reports Management
     Route::get('/reports', [ReportController::class, 'index'])->name('admin.reports.index');
+    Route::get('/reports/create', [ReportController::class, 'create'])->name('admin.reports.create');
+    Route::post('/reports', [ReportController::class, 'store'])->name('admin.reports.store');
+    Route::post('/reports/classify-image', [ReportController::class, 'classifyImage'])->name('admin.reports.classify');
     Route::get('/reports/{id}', [ReportController::class, 'show'])->name('admin.reports.show');
+    Route::get('/reports/{id}/edit', [ReportController::class, 'edit'])->name('admin.reports.edit');
+    Route::put('/reports/{id}', [ReportController::class, 'update'])->name('admin.reports.update');
+    Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('admin.reports.destroy');
 
     // Profile & Security
     Route::get('/profile', [ProfileController::class, 'index'])->name('admin.profile');
@@ -45,7 +51,6 @@ Route::middleware(['auth', 'role:admin|user'])->prefix('admin')->group(function 
     // Admin-Only Routes
     Route::middleware(['role:admin'])->group(function () {
         Route::post('/reports/{id}/status', [ReportController::class, 'updateStatus'])->name('admin.reports.status');
-        Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('admin.reports.destroy');
 
         // Users Management
         Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');

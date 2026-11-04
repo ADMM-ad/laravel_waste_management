@@ -97,7 +97,7 @@ class ReportApiTest extends TestCase
         Storage::disk('public')->assertExists($report->photo_path);
     }
 
-    public function test_terminal_state_cannot_be_altered(): void
+    public function test_status_can_be_updated_from_completed_and_logged_in_history(): void
     {
         $report = Report::create([
             'tracking_code' => 'SWM-TEST-001',
@@ -108,15 +108,21 @@ class ReportApiTest extends TestCase
             'latitude' => -6.2000,
             'longitude' => 106.8000,
             'address' => 'Jl. Test No. 1',
-            'status' => 'completed', // Terminal state
+            'status' => 'completed',
         ]);
 
         $service = app(ReportService::class);
-        $result = $service->updateStatus($report, 'in_progress', $this->admin, 'Coba ubah kembali');
+        $result = $service->updateStatus($report, 'in_progress', $this->admin, 'Tinjau ulang di lapangan');
 
-        $this->assertFalse($result->isSuccess());
-        $this->assertEquals(422, $result->statusCode);
-        $this->assertStringContainsString('telah berstatus akhir', $result->message);
+        $this->assertTrue($result->isSuccess());
+        $this->assertEquals('in_progress', $report->fresh()->status);
+        $this->assertDatabaseHas('report_status_logs', [
+            'report_id' => $report->id,
+            'changed_by_user_id' => $this->admin->id,
+            'from_status' => 'completed',
+            'to_status' => 'in_progress',
+            'notes' => 'Tinjau ulang di lapangan',
+        ]);
     }
 
     public function test_rejection_requires_minimum_5_characters_note(): void

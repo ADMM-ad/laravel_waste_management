@@ -10,6 +10,12 @@
             <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ Auth::user()->hasRole('user') ? 'Laporan Sampah Saya' : 'Daftar Laporan Sampah' }}</h1>
             <p class="text-sm text-muted-foreground">{{ Auth::user()->hasRole('user') ? 'Pantau perkembangan dan status penanganan laporan sampah yang Anda ajukan.' : 'Kelola laporan masyarakat, pantau deteksi AI, dan perbarui status penanganan.' }}</p>
         </div>
+        @if (Auth::user()->hasRole('user'))
+            <a href="{{ route('admin.reports.create') }}" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
+                <i data-lucide="plus" class="h-4 w-4"></i>
+                <span>Tambah Laporan Baru</span>
+            </a>
+        @endif
     </div>
 
     <!-- Filters & Search Bar (Shadcn Filter Toolbar) -->
@@ -129,18 +135,45 @@
                             <td class="px-5 py-4 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button type="button" onclick="openDetailModal({{ $report->id }})"
-                                            class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors">
+                                            class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground transition-colors"
+                                            title="Lihat Detail Laporan">
                                         <i data-lucide="eye" class="h-3.5 w-3.5"></i>
                                         <span>Detail</span>
                                     </button>
 
                                     @if (Auth::user()->hasRole('admin'))
                                         <button type="button"
+                                                onclick="openStatusUpdateShortcutModal({{ $report->id }}, '{{ $report->status }}', '{{ $report->tracking_code }}')"
+                                                class="inline-flex items-center gap-1.5 rounded-md border border-emerald-600/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 px-2.5 py-1.5 text-xs font-medium shadow-xs hover:bg-emerald-100 transition-colors"
+                                                title="Ubah Status">
+                                            <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i>
+                                            <span>Ubah Status</span>
+                                        </button>
+
+                                        <button type="button"
                                                 onclick="openDeleteConfirmationModal('{{ route('admin.reports.destroy', $report->id) }}', 'Hapus Laporan {{ $report->tracking_code }}', 'Apakah Anda yakin ingin menghapus data laporan ini? Data laporan akan diarsipkan dan tidak lagi muncul di daftar aktif.')"
-                                                class="inline-flex items-center justify-center rounded-md border border-destructive/30 bg-destructive/10 p-1.5 text-xs text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                                class="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
                                                 title="Hapus Laporan">
                                             <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                            <span>Hapus</span>
                                         </button>
+                                    @else
+                                        @if ($report->status === 'pending')
+                                            <a href="{{ route('admin.reports.edit', $report->id) }}"
+                                               class="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-medium shadow-xs hover:bg-accent transition-colors"
+                                               title="Edit Laporan Anda">
+                                                <i data-lucide="edit-3" class="h-3.5 w-3.5"></i>
+                                                <span>Edit</span>
+                                            </a>
+
+                                            <button type="button"
+                                                    onclick="openDeleteConfirmationModal('{{ route('admin.reports.destroy', $report->id) }}', 'Batalkan Laporan {{ $report->tracking_code }}', 'Apakah Anda yakin ingin membatalkan dan menghapus laporan yang Anda buat ini?')"
+                                                    class="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                                    title="Hapus Laporan">
+                                                <i data-lucide="trash-2" class="h-3.5 w-3.5"></i>
+                                                <span>Hapus</span>
+                                            </button>
+                                        @endif
                                     @endif
                                 </div>
                             </td>
@@ -244,17 +277,16 @@
                         @csrf
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-semibold text-foreground">Perbarui Status Penanganan:</span>
-                            <span id="terminalNotice" class="hidden text-xs text-destructive font-medium">Status sudah final (tidak dapat diubah)</span>
                         </div>
 
-                        <div class="grid sm:grid-cols-2 gap-3" id="formInputsContainer">
+                        <div class="grid sm:grid-cols-2 gap-3 items-center" id="formInputsContainer">
                             <div>
                                 <select id="statusSelect" name="status" onchange="handleStatusChange(this.value)"
-                                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-xs shadow-xs focus:outline-none">
-                                    <option value="pending">Pending</option>
-                                    <option value="in_progress">In Progress</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="rejected">Rejected</option>
+                                        class="tom-select w-full rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari status...">
+                                    <option value="pending">Pending - Menunggu Verifikasi</option>
+                                    <option value="in_progress">In Progress - Dalam Penanganan</option>
+                                    <option value="completed">Completed - Selesai</option>
+                                    <option value="rejected">Rejected - Ditolak</option>
                                 </select>
                             </div>
                             <div>
@@ -275,6 +307,65 @@
                 @endif
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Dedicated Shortcut Status Update Modal (Shadcn Dialog Style) -->
+<div id="statusShortcutModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 text-card-foreground shadow-2xl my-6">
+        <div class="flex items-center justify-between border-b border-border pb-3 mb-4">
+            <div>
+                <h3 class="font-bold text-base text-foreground flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="h-4 w-4 text-emerald-600"></i>
+                    <span>Ubah Status Penanganan</span>
+                </h3>
+                <p class="text-xs text-muted-foreground mt-0.5">Kode Laporan: <span id="shortcutModalTrackingCode" class="font-mono font-semibold text-foreground">-</span></p>
+            </div>
+            <button type="button" onclick="closeStatusUpdateShortcutModal()" class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        </div>
+
+        <form id="shortcutStatusForm" method="POST" action="" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block text-xs font-semibold text-foreground mb-1.5">Pilih Status Baru <span class="text-destructive">*</span></label>
+                <select id="shortcutStatusSelect" name="status" class="tom-select w-full" placeholder="Cari status penanganan..." required>
+                    <option value="pending">Pending - Menunggu Verifikasi (Laporan baru masuk dari warga)</option>
+                    <option value="in_progress">In Progress - Dalam Penanganan (Petugas sedang menuju lokasi / membersihkan)</option>
+                    <option value="completed">Completed - Selesai (Timbunan sampah tuntas dibersihkan)</option>
+                    <option value="rejected">Rejected - Ditolak (Laporan fiktif / tidak valid / duplikat)</option>
+                </select>
+            </div>
+
+            <!-- Status explanation helper card -->
+            <div class="rounded-lg bg-muted/40 p-3 text-[11px] text-muted-foreground space-y-1">
+                <div class="font-semibold text-foreground">Keterangan Maksud Status:</div>
+                <div>&bull; <strong>Pending:</strong> Menunggu peninjauan awal dan verifikasi oleh admin/petugas.</div>
+                <div>&bull; <strong>In Progress:</strong> Petugas telah ditugaskan dan proses pembersihan sedang berjalan.</div>
+                <div>&bull; <strong>Completed:</strong> Pembersihan tuntas dan lokasi telah bersih.</div>
+                <div>&bull; <strong>Rejected:</strong> Laporan ditolak (wajib melampirkan alasan penolakan min. 5 karakter).</div>
+            </div>
+
+            <!-- Notes textarea -->
+            <div id="shortcutNotesField" class="space-y-1">
+                <label for="shortcutNotes" id="shortcutNotesLabel" class="text-xs font-semibold text-foreground">Catatan / Tindak Lanjut Petugas:</label>
+                <textarea id="shortcutNotes" name="notes" rows="3" placeholder="Tuliskan catatan tindak lanjut petugas (wajib jika status ditolak)..."
+                          class="w-full rounded-md border border-input bg-background p-2.5 text-xs shadow-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-border">
+                <button type="button" onclick="closeStatusUpdateShortcutModal()"
+                        class="rounded-lg border border-input bg-background px-4 py-2 text-xs font-medium text-foreground shadow-xs hover:bg-accent transition-colors">
+                    Batal
+                </button>
+                <button type="submit" id="btnSubmitShortcutStatus"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
+                    <i data-lucide="check" class="h-3.5 w-3.5"></i>
+                    <span>Simpan Perubahan Status</span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -384,23 +475,18 @@
                     form.action = `{{ url('/admin/reports') }}/${r.id}/status`;
 
                     const select = document.getElementById('statusSelect');
-                    select.value = r.status;
+                    if (select.tomselect) {
+                        select.tomselect.setValue(r.status);
+                    } else {
+                        select.value = r.status;
+                    }
 
-                    const isTerminal = ['completed', 'rejected'].includes(r.status);
-                    const terminalNotice = document.getElementById('terminalNotice');
                     const btnUpdate = document.getElementById('btnUpdateStatus');
 
-                    if (isTerminal) {
-                        select.disabled = true;
-                        btnUpdate.disabled = true;
-                        btnUpdate.classList.add('opacity-50', 'cursor-not-allowed');
-                        terminalNotice.classList.remove('hidden');
-                    } else {
-                        select.disabled = false;
-                        btnUpdate.disabled = false;
-                        btnUpdate.classList.remove('opacity-50', 'cursor-not-allowed');
-                        terminalNotice.classList.add('hidden');
-                    }
+                    if (select.tomselect) select.tomselect.enable();
+                    select.disabled = false;
+                    btnUpdate.disabled = false;
+                    btnUpdate.classList.remove('opacity-50', 'cursor-not-allowed');
 
                     handleStatusChange(r.status);
                 }
@@ -417,6 +503,30 @@
 
     function closeDetailModal() {
         document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    function openStatusUpdateShortcutModal(id, currentStatus, trackingCode) {
+        const modal = document.getElementById('statusShortcutModal');
+        const form = document.getElementById('shortcutStatusForm');
+        const trackingEl = document.getElementById('shortcutModalTrackingCode');
+        const select = document.getElementById('shortcutStatusSelect');
+        const notes = document.getElementById('shortcutNotes');
+
+        form.action = `{{ url('/admin/reports') }}/${id}/status`;
+        trackingEl.textContent = trackingCode;
+        if (select.tomselect) {
+            select.tomselect.setValue(currentStatus);
+        } else {
+            select.value = currentStatus;
+        }
+        notes.value = '';
+
+        modal.classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeStatusUpdateShortcutModal() {
+        document.getElementById('statusShortcutModal').classList.add('hidden');
     }
 
     function handleStatusChange(val) {

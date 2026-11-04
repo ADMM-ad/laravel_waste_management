@@ -278,11 +278,11 @@ class AdminWebTest extends TestCase
         $this->assertSoftDeleted('reports', ['id' => $report->id]);
     }
 
-    public function test_citizen_cannot_delete_report(): void
+    public function test_citizen_can_delete_own_pending_report(): void
     {
         $citizen = User::create([
             'name' => 'Warga Test',
-            'email' => 'warga_test_del',
+            'email' => 'warga_test_del_pending@example.com',
             'password' => bcrypt('password123'),
             'is_active' => true,
         ]);
@@ -293,7 +293,7 @@ class AdminWebTest extends TestCase
             'tracking_code' => 'SWM-20261103-DEL02',
             'user_id' => $citizen->id,
             'category_id' => $category->id,
-            'description' => 'Sampah warga tidak boleh dihapus sendiri',
+            'description' => 'Sampah warga pending boleh dihapus sendiri',
             'photo_path' => 'reports/test_del2.jpg',
             'latitude' => -6.2,
             'longitude' => 106.8,
@@ -302,7 +302,90 @@ class AdminWebTest extends TestCase
         ]);
 
         $response = $this->actingAs($citizen)->delete("/admin/reports/{$report->id}");
-        $response->assertStatus(403);
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertSoftDeleted('reports', ['id' => $report->id]);
+    }
+
+    public function test_citizen_cannot_delete_other_citizens_report(): void
+    {
+        $citizen1 = User::create([
+            'name' => 'Warga 1',
+            'email' => 'warga1_del@example.com',
+            'password' => bcrypt('password123'),
+            'is_active' => true,
+        ]);
+        $citizen1->assignRole('user');
+
+        $citizen2 = User::create([
+            'name' => 'Warga 2',
+            'email' => 'warga2_del@example.com',
+            'password' => bcrypt('password123'),
+            'is_active' => true,
+        ]);
+        $citizen2->assignRole('user');
+
+        $category = \App\Models\WasteCategory::first();
+        $report = \App\Models\Report::create([
+            'tracking_code' => 'SWM-20261103-DEL03',
+            'user_id' => $citizen1->id,
+            'category_id' => $category->id,
+            'description' => 'Laporan milik warga 1',
+            'photo_path' => 'reports/test_del3.jpg',
+            'latitude' => -6.2,
+            'longitude' => 106.8,
+            'address' => 'Jl. Kenanga',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($citizen2)->delete("/admin/reports/{$report->id}");
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
         $this->assertDatabaseHas('reports', ['id' => $report->id, 'deleted_at' => null]);
+    }
+
+    public function test_citizen_cannot_delete_in_progress_report(): void
+    {
+        $citizen = User::create([
+            'name' => 'Warga 3',
+            'email' => 'warga3_del@example.com',
+            'password' => bcrypt('password123'),
+            'is_active' => true,
+        ]);
+        $citizen->assignRole('user');
+
+        $category = \App\Models\WasteCategory::first();
+        $report = \App\Models\Report::create([
+            'tracking_code' => 'SWM-20261103-DEL04',
+            'user_id' => $citizen->id,
+            'category_id' => $category->id,
+            'description' => 'Laporan in progress tidak boleh dihapus',
+            'photo_path' => 'reports/test_del4.jpg',
+            'latitude' => -6.2,
+            'longitude' => 106.8,
+            'address' => 'Jl. Kenanga',
+            'status' => 'in_progress',
+        ]);
+
+        $response = $this->actingAs($citizen)->delete("/admin/reports/{$report->id}");
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+        $this->assertDatabaseHas('reports', ['id' => $report->id, 'deleted_at' => null]);
+    }
+
+    public function test_citizen_can_view_create_report_page(): void
+    {
+        $citizen = User::create([
+            'name' => 'Warga Form Test',
+            'email' => 'warga_form_test',
+            'password' => bcrypt('password123'),
+            'is_active' => true,
+        ]);
+        $citizen->assignRole('user');
+
+        $response = $this->actingAs($citizen)->get('/admin/reports/create');
+        $response->assertStatus(200);
+        $response->assertSee('Buat Laporan Baru');
+        $response->assertSee('Klasifikasi Otomatis AI (MobileNetV2)');
     }
 }

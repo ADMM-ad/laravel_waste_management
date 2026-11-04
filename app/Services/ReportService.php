@@ -79,21 +79,13 @@ class ReportService
     }
 
     /**
-     * Mutate report status with strict terminal-state rules and audit trail logging.
+     * Mutate report status and record audit trail in report_status_logs.
      */
     public function updateStatus(Report $report, string $newStatus, User $admin, ?string $note): ServiceResult
     {
         $allowedStatuses = ['pending', 'in_progress', 'completed', 'rejected'];
         if (! in_array($newStatus, $allowedStatuses)) {
             return ServiceResult::error("Status '{$newStatus}' tidak valid.", 422);
-        }
-
-        // Terminal state validation
-        if (in_array($report->status, ['completed', 'rejected'])) {
-            return ServiceResult::error(
-                "Laporan dengan status '{$report->status}' telah berstatus akhir dan tidak dapat diubah lagi.",
-                422
-            );
         }
 
         // Rejection note rule
@@ -201,12 +193,20 @@ class ReportService
     }
 
     /**
-     * Soft delete a waste report (Admin only).
+     * Soft delete a waste report (Admin or owner citizen if status is pending).
      */
     public function deleteReport(Report $report, User $currentUser): ServiceResult
     {
-        if (! $currentUser->hasRole('admin')) {
-            return ServiceResult::error('Hanya Administrator yang memiliki wewenang menghapus laporan.', 403);
+        $isAdmin = $currentUser->hasRole('admin');
+        $isOwner = $report->user_id === $currentUser->id;
+
+        if (! $isAdmin) {
+            if (! $isOwner) {
+                return ServiceResult::error('Anda tidak memiliki wewenang untuk menghapus laporan ini.', 403);
+            }
+            if ($report->status !== 'pending') {
+                return ServiceResult::error('Hanya laporan berstatus pending yang dapat dihapus oleh pelapor.', 422);
+            }
         }
 
         try {
@@ -216,6 +216,72 @@ class ReportService
             return ServiceResult::success(null, "Laporan {$trackingCode} berhasil dihapus.");
         } catch (\Throwable $e) {
             return ServiceResult::error('Gagal menghapus laporan: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Update an existing waste report (Owner citizen only, and only if status is pending).
+     */
+    public function updateReport(Report $report, array $data, ?UploadedFile $photo, User $currentUser): ServiceResult
+    {
+        if ($report->user_id !== $currentUser->id && ! $currentUser->hasRole('admin')) {
+            return ServiceResult::error('Anda tidak memiliki izin untuk mengedit laporan ini.', 403);
+        }
+
+        if ($report->status !== 'pending') {
+            return ServiceResult::error('Hanya laporan berstatus pending yang dapat diedit.', 422);
+        }
+
+        try {
+            $photoPath = $report->photo_path;
+            if ($photo) {
+                $allowedExtensions = ['jpeg', 'jpg', 'png', 'webp'];
+                $extension = strtolower($photo->getClientOriginalExtension());
+                if (! in_array($extension, $allowedExtensions)) {
+                    return ServiceResult::error('Format gambar tidak didukung. Gunakan jpeg, jpg, png, atau webp.', 422);
+                }
+                if ($photo->getSize() > 5 * 1024 * 1024) {
+                    return ServiceResult::error('Ukuran gambar maksimal adalah 5MB.', 422);
+                }
+                $fileName = Str::uuid() . '.' . $extension;
+                $photoPath = $this->compressAndStorePhoto($photo, $fileName);
+            }
+
+            DB::transaction(function () use ($report, $data, $photoPath, $currentUser) {
+                $updatePayload = [
+                    'category_id' => $data['category_id'] ?? $report->category_id,
+                    'description' => $data['description'] ?? $report->description,
+                    'photo_path' => $photoPath,
+                    'latitude' => isset($data['latitude']) ? floatval($data['latitude']) : $report->latitude,
+                    'longitude' => isset($data['longitude']) ? floatval($data['longitude']) : $report->longitude,
+                    'address' => $data['address'] ?? $report->address,
+                    'scale' => $data['scale'] ?? $report->scale,
+                    'urgency' => $data['urgency'] ?? $report->urgency,
+                ];
+
+                if (isset($data['ai_predicted_category'])) {
+                    $updatePayload['ai_predicted_category'] = $data['ai_predicted_category'];
+                }
+                if (isset($data['ai_confidence_score'])) {
+                    $updatePayload['ai_confidence_score'] = floatval($data['ai_confidence_score']);
+                }
+
+                $report->update($updatePayload);
+
+                ReportStatusLog::create([
+                    'report_id' => $report->id,
+                    'changed_by_user_id' => $currentUser->id,
+                    'from_status' => $report->status,
+                    'to_status' => $report->status,
+                    'notes' => 'Laporan diperbarui oleh pelapor.',
+                ]);
+            });
+
+            $report->load(['category', 'user', 'statusLogs']);
+
+            return ServiceResult::success($report, 'Laporan sampah berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            return ServiceResult::error('Gagal memperbarui laporan: ' . $e->getMessage(), 500);
         }
     }
 
