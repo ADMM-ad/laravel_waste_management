@@ -388,4 +388,62 @@ class AdminWebTest extends TestCase
         $response->assertSee('Buat Laporan Baru');
         $response->assertSee('Klasifikasi Otomatis AI (MobileNetV2)');
     }
+
+    public function test_admin_can_create_new_citizen_user(): void
+    {
+        $admin = User::where('email', 'admin')->first();
+
+        $response = $this->actingAs($admin)->post('/admin/users', [
+            'name' => 'Warga Baru Ditambahkan',
+            'email' => 'warga_baru_test',
+            'phone_number' => '081233445566',
+            'password' => '12345678',
+            'role' => 'user',
+            'is_active' => '1',
+        ]);
+
+        $response->assertRedirect('/admin/users');
+        $response->assertSessionHas('success');
+
+        $user = User::where('email', 'warga_baru_test')->first();
+        $this->assertNotNull($user);
+        $this->assertEquals('Warga Baru Ditambahkan', $user->name);
+        $this->assertTrue($user->hasRole('user'));
+        $this->assertTrue($user->is_active);
+    }
+
+    public function test_admin_can_create_new_admin_user(): void
+    {
+        $admin = User::where('email', 'admin')->first();
+
+        $response = $this->actingAs($admin)->post('/admin/users', [
+            'name' => 'Admin Baru Ditambahkan',
+            'email' => 'admin_baru_test',
+            'phone_number' => '089988776655',
+            'password' => '12345678',
+            'role' => 'admin',
+            'is_active' => '1',
+        ]);
+
+        $response->assertRedirect('/admin/users');
+        $response->assertSessionHas('success');
+
+        $newAdmin = User::where('email', 'admin_baru_test')->first();
+        $this->assertNotNull($newAdmin);
+        $this->assertTrue($newAdmin->hasRole('admin'));
+    }
+
+    public function test_duplicate_email_fails_validation_when_creating_user(): void
+    {
+        $admin = User::where('email', 'admin')->first();
+
+        $response = $this->actingAs($admin)->post('/admin/users', [
+            'name' => 'Duplikat Admin',
+            'email' => 'admin', // already exists
+            'password' => '12345678',
+            'role' => 'user',
+        ]);
+
+        $response->assertSessionHasErrors(['email']);
+    }
 }

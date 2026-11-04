@@ -52,6 +52,33 @@ class UserService
     }
 
     /**
+     * Create a new user with assigned role.
+     */
+    public function createUser(array $data, User $currentUser): ServiceResult
+    {
+        if (! $currentUser->hasRole('admin')) {
+            return ServiceResult::error('Hanya Administrator yang memiliki akses untuk mendaftarkan pengguna baru.', 403);
+        }
+
+        try {
+            $user = User::create([
+                'name' => trim($data['name']),
+                'email' => trim($data['email']),
+                'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+                'phone_number' => ! empty($data['phone_number']) ? trim($data['phone_number']) : null,
+                'is_active' => isset($data['is_active']) ? (bool) $data['is_active'] : true,
+            ]);
+
+            $role = in_array($data['role'], ['admin', 'user']) ? $data['role'] : 'user';
+            $user->assignRole($role);
+
+            return ServiceResult::success($user, "Pengguna {$user->name} berhasil ditambahkan dengan peran {$role}.", 201);
+        } catch (\Throwable $e) {
+            return ServiceResult::error('Gagal menambahkan pengguna: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Soft delete user.
      */
     public function deleteUser(User $user, User $currentUser): ServiceResult

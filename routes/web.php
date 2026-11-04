@@ -54,6 +54,7 @@ Route::middleware(['auth', 'role:admin|user'])->prefix('admin')->group(function 
 
         // Users Management
         Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
         Route::post('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('admin.users.toggle-status');
         Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 

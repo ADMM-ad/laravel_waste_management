@@ -10,6 +10,13 @@
             <h1 class="text-2xl font-bold tracking-tight text-foreground">Pengguna Terdaftar</h1>
             <p class="text-sm text-muted-foreground">Kelola akun warga dan hak akses administrator portal.</p>
         </div>
+        <div>
+            <button type="button" onclick="openCreateUserModal()"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
+                <i data-lucide="user-plus" class="h-4 w-4"></i>
+                <span>Tambah Pengguna Baru</span>
+            </button>
+        </div>
     </div>
 
     <!-- Filters & Search Bar -->
@@ -211,9 +218,282 @@
     </div>
 </div>
 
+<!-- Create User Modal (Shadcn Dialog Style) -->
+<div id="createUserModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 text-card-foreground shadow-2xl my-6">
+        <div class="flex items-center justify-between border-b border-border pb-3 mb-4">
+            <div class="flex items-center gap-2.5">
+                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                    <i data-lucide="user-plus" class="h-5 w-5"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-base text-foreground">Tambah Pengguna Baru</h3>
+                    <p class="text-xs text-muted-foreground">Daftarkan akun administrator atau warga baru.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeCreateUserModal()" class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent transition-colors">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        </div>
+
+        <!-- Alert Ringkasan Validasi Server Error -->
+        @if ($errors->any())
+            <div class="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-destructive text-xs space-y-1.5 animate-in fade-in duration-200">
+                <div class="flex items-center gap-2 font-semibold">
+                    <i data-lucide="alert-circle" class="h-4 w-4 shrink-0"></i>
+                    <span>Pendaftaran pengguna gagal! Mohon periksa kesalahan berikut:</span>
+                </div>
+                <ul class="list-disc list-inside space-y-0.5 text-[11px] text-destructive/90 pl-1 font-medium">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form id="createUserForm" action="{{ route('admin.users.store') }}" method="POST" novalidate class="space-y-4">
+            @csrf
+
+            <!-- Nama Lengkap -->
+            <div class="space-y-1">
+                <label for="createUserName" class="text-xs font-semibold text-foreground">Nama Lengkap <span class="text-destructive">*</span></label>
+                <input type="text" name="name" id="createUserName" value="{{ old('name') }}"
+                       placeholder="Contoh: Budi Santoso"
+                       class="w-full rounded-md border @error('name') border-destructive focus:ring-destructive @else border-input focus:ring-ring @enderror bg-background p-2.5 text-xs shadow-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1">
+                @error('name')
+                    <p class="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                        <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
+                <p id="clientErrorName" class="hidden text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                    <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                    <span>Nama lengkap wajib diisi (minimal 2 karakter).</span>
+                </p>
+            </div>
+
+            <!-- Username / Email -->
+            <div class="space-y-1">
+                <label for="createUserEmail" class="text-xs font-semibold text-foreground">Username / Email <span class="text-destructive">*</span></label>
+                <input type="text" name="email" id="createUserEmail" value="{{ old('email') }}"
+                       placeholder="Contoh: budi@example.com atau budis"
+                       class="w-full rounded-md border @error('email') border-destructive focus:ring-destructive @else border-input focus:ring-ring @enderror bg-background p-2.5 text-xs shadow-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1">
+                @error('email')
+                    <p class="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                        <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
+                <p id="clientErrorEmail" class="hidden text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                    <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                    <span id="clientErrorEmailText">Username atau email wajib diisi.</span>
+                </p>
+                <p class="text-[10px] text-muted-foreground">Digunakan untuk login di web maupun aplikasi mobile.</p>
+            </div>
+
+            <!-- Nomor Telepon -->
+            <div class="space-y-1">
+                <label for="createUserPhone" class="text-xs font-semibold text-foreground">Nomor Telepon / WhatsApp <span class="text-muted-foreground text-[10px]">(Opsional)</span></label>
+                <input type="text" name="phone_number" id="createUserPhone" value="{{ old('phone_number') }}"
+                       placeholder="Contoh: 081234567890"
+                       class="w-full rounded-md border @error('phone_number') border-destructive focus:ring-destructive @else border-input focus:ring-ring @enderror bg-background p-2.5 text-xs shadow-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1">
+                @error('phone_number')
+                    <p class="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                        <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
+            </div>
+
+            <!-- Password -->
+            <div class="space-y-1">
+                <label for="createUserPassword" class="text-xs font-semibold text-foreground">Kata Sandi <span class="text-destructive">*</span></label>
+                <input type="password" name="password" id="createUserPassword" minlength="6"
+                       placeholder="Minimal 6 karakter..."
+                       class="w-full rounded-md border @error('password') border-destructive focus:ring-destructive @else border-input focus:ring-ring @enderror bg-background p-2.5 text-xs shadow-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1">
+                @error('password')
+                    <p class="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                        <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
+                <p id="clientErrorPassword" class="hidden text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                    <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                    <span>Kata sandi minimal 6 karakter.</span>
+                </p>
+            </div>
+
+            <!-- Role Selection (Dropdown TomSelect) -->
+            <div class="space-y-1">
+                <label for="createUserRole" class="text-xs font-semibold text-foreground">Pilih Peran (Role) Pengguna <span class="text-destructive">*</span></label>
+                <select name="role" id="createUserRole" class="tom-select w-full" placeholder="Pilih peran pengguna...">
+                    <option value="user" {{ old('role', 'user') == 'user' ? 'selected' : '' }}>Warga (User) - Akses Pelaporan Mobile & Web</option>
+                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrator (Admin) - Akses Penuh Sistem & Kelola User</option>
+                </select>
+                @error('role')
+                    <p class="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                        <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                        <span>{{ $message }}</span>
+                    </p>
+                @enderror
+                <p id="clientErrorRole" class="hidden text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                    <i data-lucide="alert-circle" class="h-3.5 w-3.5 shrink-0"></i>
+                    <span>Silakan pilih peran pengguna (Warga atau Admin).</span>
+                </p>
+            </div>
+
+            <!-- Status Aktif Checkbox -->
+            <div class="flex items-center gap-2 pt-1">
+                <input type="checkbox" name="is_active" id="createUserIsActive" value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }} class="h-4 w-4 rounded border-input text-emerald-600 focus:ring-emerald-500">
+                <label for="createUserIsActive" class="text-xs text-foreground font-medium">Aktifkan akun pengguna langsung setelah dibuat</label>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+                <button type="button" onclick="closeCreateUserModal()"
+                        class="rounded-lg border border-input bg-background px-4 py-2 text-xs font-medium text-foreground shadow-xs hover:bg-accent transition-colors">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
+                    <i data-lucide="save" class="h-3.5 w-3.5"></i>
+                    <span>Simpan Pengguna</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
-    function openStatusConfirmationModal(actionUrl, userName, isActive) {
+    window.openCreateUserModal = function() {
+        const modal = document.getElementById('createUserModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        const roleSelect = document.getElementById('createUserRole');
+        if (roleSelect && !roleSelect.tomselect && typeof TomSelect !== 'undefined') {
+            new TomSelect(roleSelect, {
+                create: false,
+                maxItems: 1,
+                placeholder: 'Pilih peran pengguna...',
+                allowEmptyOption: false,
+                closeAfterSelect: true,
+            });
+        }
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    };
+
+    window.closeCreateUserModal = function() {
+        const modal = document.getElementById('createUserModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    };
+
+    // Client-side Interactive Form Validation
+    document.addEventListener('DOMContentLoaded', function () {
+        @if ($errors->any())
+            // Auto open modal on server validation error
+            window.openCreateUserModal();
+        @endif
+
+        const createUserForm = document.getElementById('createUserForm');
+        if (createUserForm) {
+            createUserForm.addEventListener('submit', function (e) {
+                let isValid = true;
+                
+                const nameInput = document.getElementById('createUserName');
+                const emailInput = document.getElementById('createUserEmail');
+                const passwordInput = document.getElementById('createUserPassword');
+                const roleSelect = document.getElementById('createUserRole');
+                
+                const clientErrorName = document.getElementById('clientErrorName');
+                const clientErrorEmail = document.getElementById('clientErrorEmail');
+                const clientErrorPassword = document.getElementById('clientErrorPassword');
+                const clientErrorRole = document.getElementById('clientErrorRole');
+                
+                function clearFieldError(input, errorEl) {
+                    if (input) {
+                        input.classList.remove('border-destructive', 'focus:ring-destructive');
+                        input.classList.add('border-input', 'focus:ring-ring');
+                    }
+                    if (errorEl) errorEl.classList.add('hidden');
+                }
+                
+                function showFieldError(input, errorEl) {
+                    if (input) {
+                        input.classList.add('border-destructive', 'focus:ring-destructive');
+                        input.classList.remove('border-input', 'focus:ring-ring');
+                    }
+                    if (errorEl) errorEl.classList.remove('hidden');
+                    isValid = false;
+                }
+
+                clearFieldError(nameInput, clientErrorName);
+                clearFieldError(emailInput, clientErrorEmail);
+                clearFieldError(passwordInput, clientErrorPassword);
+                clearFieldError(null, clientErrorRole);
+
+                // Name validation
+                if (!nameInput.value.trim() || nameInput.value.trim().length < 2) {
+                    showFieldError(nameInput, clientErrorName);
+                }
+
+                // Email/username validation
+                if (!emailInput.value.trim()) {
+                    document.getElementById('clientErrorEmailText').innerText = 'Username atau email wajib diisi.';
+                    showFieldError(emailInput, clientErrorEmail);
+                } else if (emailInput.value.trim().length < 3) {
+                    document.getElementById('clientErrorEmailText').innerText = 'Username atau email minimal 3 karakter.';
+                    showFieldError(emailInput, clientErrorEmail);
+                }
+
+                // Password validation
+                if (!passwordInput.value || passwordInput.value.length < 6) {
+                    showFieldError(passwordInput, clientErrorPassword);
+                }
+
+                // Role validation
+                if (!roleSelect.value || (roleSelect.value !== 'admin' && roleSelect.value !== 'user')) {
+                    showFieldError(null, clientErrorRole);
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    if (window.lucide) lucide.createIcons();
+                    if (!nameInput.value.trim() || nameInput.value.trim().length < 2) {
+                        nameInput.focus();
+                    } else if (!emailInput.value.trim() || emailInput.value.trim().length < 3) {
+                        emailInput.focus();
+                    } else if (!passwordInput.value || passwordInput.value.length < 6) {
+                        passwordInput.focus();
+                    }
+                }
+            });
+
+            // Live clear error on typing
+            ['createUserName', 'createUserEmail', 'createUserPassword'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', function() {
+                        this.classList.remove('border-destructive', 'focus:ring-destructive');
+                        this.classList.add('border-input', 'focus:ring-ring');
+                        const errMap = {
+                            'createUserName': 'clientErrorName',
+                            'createUserEmail': 'clientErrorEmail',
+                            'createUserPassword': 'clientErrorPassword'
+                        };
+                        const errEl = document.getElementById(errMap[id]);
+                        if (errEl) errEl.classList.add('hidden');
+                    });
+                }
+            });
+        }
+    });
+
+    window.openStatusConfirmationModal = function(actionUrl, userName, isActive) {
         const modal = document.getElementById('statusConfirmModal');
         const form = document.getElementById('statusConfirmForm');
         const titleEl = document.getElementById('statusModalTitle');
@@ -242,14 +522,14 @@
         }
 
         modal.classList.remove('hidden');
-        lucide.createIcons();
-    }
+        if (window.lucide) lucide.createIcons();
+    };
 
-    function closeStatusConfirmationModal() {
+    window.closeStatusConfirmationModal = function() {
         document.getElementById('statusConfirmModal').classList.add('hidden');
-    }
+    };
 
-    function openDeleteConfirmationModal(actionUrl, title, message) {
+    window.openDeleteConfirmationModal = function(actionUrl, title, message) {
         const modal = document.getElementById('deleteConfirmModal');
         const form = document.getElementById('deleteConfirmForm');
         const titleEl = document.getElementById('deleteModalTitle');
@@ -260,12 +540,12 @@
         msgEl.innerText = message;
 
         modal.classList.remove('hidden');
-        lucide.createIcons();
-    }
+        if (window.lucide) lucide.createIcons();
+    };
 
-    function closeDeleteConfirmationModal() {
+    window.closeDeleteConfirmationModal = function() {
         document.getElementById('deleteConfirmModal').classList.add('hidden');
-    }
+    };
 </script>
 @endpush
 @endsection

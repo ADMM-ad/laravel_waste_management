@@ -44,6 +44,7 @@ Sistem ini dibangun dengan mematuhi prinsip Clean Architecture (*Service-Reposit
    - Di dalam modal detail tetap disediakan formulir pembaruan status lengkap dengan riwayat log (*who, when, status transition, and notes*).
    - Admin dapat memperbarui status laporan kapan saja tanpa terkunci permanen.
 5. **Manajemen Pengguna (User Management):**
+   - **Tambah Pengguna Baru:** Admin dapat mendaftarkan akun pengguna baru secara langsung dari dashboard web (`/admin/users`) dan menentukan perannya sebagai **Administrator (`admin`)** atau **Warga (`user`)**.
    - Tabel direktori pengguna dengan fitur pencarian dan filter status akun.
    - Tombol aktifkan/nonaktifkan akun dilengkapi **Modal Konfirmasi Shadcn Kustom** (bebas dari *browser alert default*).
 6. **Optimasi Berkas Media Otomatis:**
@@ -123,8 +124,8 @@ Agar seluruh komponen tidak mengalami bentrok (*port conflict*), alokasi port lo
 
 | Role | Username / Email | Password | Keterangan |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin` *(atau admin@example.com)* | `password123` | Akses penuh dashboard, kelola laporan, dan mutasi status |
-| **Warga (User)** | `warga@example.com` | `password123` | Akses pembuatan laporan dan pelacakan status penanganan |
+| **Admin** | `admin` | `12345678` | Akses penuh dashboard, kelola laporan, mutasi status, dan tambah user baru |
+| **Warga (User)** | `user` | `12345678` | Akses pembuatan laporan dan pelacakan status penanganan |
 
 ---
 
@@ -137,8 +138,8 @@ php artisan test
 ```
 
 **Hasil Pengujian:**
-- Total Tests: **27 Tests Passed**
-- Assertions: **102 Assertions Passed**
+- Total Tests: **30 Tests Passed**
+- Assertions: **116 Assertions Passed**
 - Status: **100% Passed (0 Errors)**
 
 ---
