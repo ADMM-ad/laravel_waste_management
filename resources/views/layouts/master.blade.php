@@ -137,30 +137,130 @@
             100% { background-position: -200% 0; }
         }
 
-        /* TomSelect Theme Customization for Shadcn */
+        /* TomSelect Theme Customization for Shadcn - Synchronized with Search Input */
+        .ts-wrapper {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            position: relative !important;
+        }
         .ts-control {
             border: 1px solid hsl(var(--input)) !important;
-            border-radius: calc(var(--radius) - 2px) !important;
-            padding: 0.5rem 0.75rem !important;
-            font-size: 0.875rem !important;
-            background-color: hsl(var(--card)) !important;
+            border-radius: 0.375rem !important; /* rounded-md */
+            padding: 0.5rem 2rem 0.5rem 0.75rem !important; /* py-2 pl-3 pr-8 */
+            font-size: 0.75rem !important; /* text-xs */
+            background-color: hsl(var(--background)) !important; /* Match Search Input bg-background */
             color: hsl(var(--foreground)) !important;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* shadow-xs */
+            min-height: 2.25rem !important;
+            height: 2.25rem !important;
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
+            cursor: pointer !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
         }
-        .ts-control.focus {
-            outline: 2px solid hsl(var(--primary)) !important;
-            outline-offset: 1px !important;
+        .ts-control.focus,
+        .ts-wrapper.focus .ts-control {
+            border-color: #15803D !important;
+            box-shadow: 0 0 0 1px #15803D !important; /* Match Search Input focus:ring-1 focus:ring-ring */
+            outline: none !important;
+        }
+        .ts-wrapper.single .ts-control .item {
+            background: transparent !important; /* Remove TomSelect default grey pill background */
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: inline-block !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            vertical-align: middle !important;
+            font-size: 0.75rem !important;
+            line-height: 1.25 !important;
+            color: hsl(var(--foreground)) !important;
+        }
+        .ts-wrapper.single .ts-control input {
+            font-size: 0.75rem !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            color: hsl(var(--foreground)) !important;
+            background: transparent !important;
+        }
+        .ts-wrapper.single .ts-control input::placeholder {
+            color: #64748B !important; /* Match placeholder:text-muted-foreground */
+            font-size: 0.75rem !important;
         }
         .ts-dropdown {
             border: 1px solid hsl(var(--border)) !important;
-            border-radius: var(--radius) !important;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-            font-size: 0.875rem !important;
+            border-radius: 0.375rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+            font-size: 0.75rem !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            z-index: 50 !important;
+            background-color: hsl(var(--card)) !important;
+            color: hsl(var(--foreground)) !important;
+            padding: 0.25rem 0 !important;
         }
-        .ts-dropdown .active {
-            background-color: #DCFCE7 !important;
+        .ts-dropdown .option {
+            padding: 0.375rem 0.75rem !important;
+            font-size: 0.75rem !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            max-width: 100% !important;
+            color: hsl(var(--foreground)) !important;
+            cursor: pointer !important;
+        }
+        .ts-dropdown .option.active,
+        .ts-dropdown .option:hover {
+            background-color: #DCFCE7 !important; /* Soft Emerald hover */
             color: #15803D !important;
             font-weight: 500 !important;
+        }
+        .ts-dropdown .option.selected {
+            background-color: #F0FDF4 !important; /* Soft Emerald selected, not grey! */
+            color: #15803D !important;
+            font-weight: 600 !important;
+        }
+        .dark .ts-dropdown .option.active,
+        .dark .ts-dropdown .option:hover {
+            background-color: rgba(21, 128, 61, 0.2) !important;
+            color: #4ADE80 !important;
+        }
+        .dark .ts-dropdown .option.selected {
+            background-color: rgba(21, 128, 61, 0.3) !important;
+            color: #86EFAC !important;
+        }
+        .ts-wrapper.single .ts-control:after {
+            border-color: #64748B transparent transparent transparent !important;
+            right: 0.75rem !important;
+        }
+        .ts-wrapper.single.dropdown-active .ts-control:after {
+            border-color: transparent transparent #64748B transparent !important;
+        }
+        .dark .ts-wrapper.single .ts-control:after {
+            border-color: #94A3B8 transparent transparent transparent !important;
+        }
+        .dark .ts-wrapper.single.dropdown-active .ts-control:after {
+            border-color: transparent transparent #94A3B8 transparent !important;
+        }
+
+        /* Generic select ellipsis safeguard */
+        select {
+            text-overflow: ellipsis !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+            max-width: 100% !important;
         }
     </style>
 
@@ -179,7 +279,7 @@
         <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 z-40 hidden bg-black/50 backdrop-blur-sm transition-opacity lg:hidden"></div>
 
         <!-- Sidebar (Shadcn Inset Sidebar Style) -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-in-out lg:static lg:translate-x-0">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 flex w-64 -translate-x-full flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:shrink-0 lg:translate-x-0">
             <!-- Sidebar Header / Brand -->
             <div class="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 font-semibold text-sidebar-foreground">
@@ -217,14 +317,14 @@
                     @if (Auth::user()->hasRole('admin'))
                         <!-- Menu 3: Pengguna -->
                         <a href="{{ route('admin.users.index') }}"
-                           class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-sidebar-accent text-primary font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground' }}">
+                            class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.users.*') ? 'bg-sidebar-accent text-primary font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground' }}">
                             <i data-lucide="users" class="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"></i>
                             <span>Manajemen User</span>
                         </a>
 
                         <!-- Menu 4: Model AI Metrics (Internal Laravel Page) -->
                         <a href="{{ route('admin.ai.index') }}"
-                           class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.ai.*') ? 'bg-sidebar-accent text-primary font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground' }}">
+                            class="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors {{ request()->routeIs('admin.ai.*') ? 'bg-sidebar-accent text-primary font-semibold shadow-xs' : 'text-muted-foreground hover:bg-sidebar-accent hover:text-foreground' }}">
                             <i data-lucide="cpu" class="h-4 w-4 shrink-0 transition-transform group-hover:scale-105"></i>
                             <span>Evaluasi Model AI</span>
                         </a>
@@ -252,27 +352,6 @@
                     @endif
                 </nav>
             </div>
-
-            <!-- Sidebar Footer / User Info & Logout -->
-            <div class="border-t border-sidebar-border p-3">
-                <div class="flex items-center justify-between gap-2 rounded-md p-2 hover:bg-sidebar-accent/50">
-                    <a href="{{ route('admin.profile') }}" class="flex items-center gap-2.5 overflow-hidden flex-1 group">
-                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
-                            {{ strtoupper(substr(Auth::user()->name ?? 'AD', 0, 2)) }}
-                        </div>
-                        <div class="flex flex-1 flex-col overflow-hidden text-left leading-tight">
-                            <span class="truncate text-xs font-semibold text-sidebar-foreground group-hover:text-primary transition-colors">{{ Auth::user()->name ?? 'Administrator' }}</span>
-                            <span class="truncate text-[11px] text-muted-foreground">{{ Auth::user()->email ?? 'admin@banksampah.id' }}</span>
-                        </div>
-                    </a>
-                    <form action="{{ route('admin.logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" title="Keluar / Logout" class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
-                            <i data-lucide="log-out" class="h-4 w-4"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
         </aside>
 
         <!-- Main Wrapper -->
@@ -280,8 +359,8 @@
             <!-- Navbar / Header (Shadcn Navbar Style) -->
             <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-card/80">
                 <div class="flex items-center gap-3">
-                    <!-- Sidebar Toggle Button -->
-                    <button type="button" onclick="toggleSidebar()" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-card text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                    <!-- Sidebar Toggle Button (Hanya tampil di HP/Tablet, tersembunyi di Laptop/Desktop) -->
+                    <button type="button" onclick="toggleSidebar()" class="inline-flex lg:hidden h-9 w-9 items-center justify-center rounded-md border border-input bg-card text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <i data-lucide="panel-left" class="h-4 w-4"></i>
                     </button>
 
@@ -421,6 +500,10 @@
                         maxItems: 1,
                         placeholder: selectEl.getAttribute('placeholder') || 'Pilih atau cari...',
                         allowEmptyOption: true,
+                        closeAfterSelect: true,
+                        onItemAdd: function() {
+                            this.control_input.blur();
+                        }
                     });
                 }
             });

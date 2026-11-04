@@ -23,23 +23,27 @@
             </div>
 
             <!-- Category Filter (Searchable TomSelect) -->
-            <select name="category_id" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari Kategori...">
-                <option value="all">Semua Kategori</option>
-                @foreach ($categories as $cat)
-                    <option value="{{ $cat->id }}" {{ ($filters['category_id'] ?? '') == $cat->id ? 'selected' : '' }}>
-                        {{ $cat->name }}
-                    </option>
-                @endforeach
-            </select>
+            <div class="w-full min-w-0">
+                <select name="category_id" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari Kategori...">
+                    <option value="all">Semua Kategori</option>
+                    @foreach ($categories as $cat)
+                        <option value="{{ $cat->id }}" {{ ($filters['category_id'] ?? '') == $cat->id ? 'selected' : '' }}>
+                            {{ $cat->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
             <!-- Status Filter (Searchable TomSelect) -->
-            <select name="status" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari Status...">
-                <option value="all">Semua Status</option>
-                <option value="pending" {{ ($filters['status'] ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
-                <option value="in_progress" {{ ($filters['status'] ?? '') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                <option value="completed" {{ ($filters['status'] ?? '') == 'completed' ? 'selected' : '' }}>Completed</option>
-                <option value="rejected" {{ ($filters['status'] ?? '') == 'rejected' ? 'selected' : '' }}>Rejected</option>
-            </select>
+            <div class="w-full min-w-0">
+                <select name="status" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari Status...">
+                    <option value="all">Semua Status</option>
+                    <option value="pending" {{ ($filters['status'] ?? '') == 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="in_progress" {{ ($filters['status'] ?? '') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                    <option value="completed" {{ ($filters['status'] ?? '') == 'completed' ? 'selected' : '' }}>Completed</option>
+                    <option value="rejected" {{ ($filters['status'] ?? '') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                </select>
+            </div>
 
             <!-- Buttons -->
             <div class="flex items-center gap-2">
@@ -162,8 +166,8 @@
 </div>
 
 <!-- Detail & Status Update Modal (Shadcn Dialog) -->
-<div id="detailModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-    <div class="w-full max-w-2xl rounded-xl border border-border bg-card p-6 text-card-foreground shadow-lg my-8 max-h-[90vh] overflow-y-auto">
+<div id="detailModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="w-full max-w-2xl rounded-2xl border border-border bg-card p-4 sm:p-6 text-card-foreground shadow-2xl my-4 sm:my-8 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between border-b border-border pb-3 mb-4">
             <div>
                 <h3 class="font-semibold text-lg" id="modalTrackingCode">Detail Laporan</h3>

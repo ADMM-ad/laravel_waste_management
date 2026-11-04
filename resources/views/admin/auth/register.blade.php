@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full">
+<html lang="id" class="min-h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendaftaran Akun Warga - Waste Management</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
 
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,9 +48,23 @@
     </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        .login-bg-pattern {
+            background-color: #F8FAFC;
+            background-image: radial-gradient(#CBD5E1 1.2px, transparent 1.2px);
+            background-size: 24px 24px;
+        }
+    </style>
 </head>
-<body class="h-full bg-background font-sans text-foreground antialiased flex items-center justify-center p-4">
-    <div class="w-full max-w-md my-8">
+<body class="min-h-screen login-bg-pattern font-sans text-foreground antialiased flex flex-col justify-center items-center py-6 sm:py-10 px-4 overflow-y-auto relative selection:bg-primary selection:text-white">
+    <!-- Ambient Themed Decorative Elements -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl"></div>
+        <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl"></div>
+    </div>
+
+    <div class="w-full max-w-md my-auto relative z-10">
         <!-- Brand Header -->
         <div class="flex flex-col items-center text-center mb-6">
             <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-md border border-border p-1.5 mb-3">

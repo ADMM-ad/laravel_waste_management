@@ -31,27 +31,27 @@
 
     <!-- Alert Status Hosting FastAPI Service -->
     @if (! $aiServiceOnline)
-        <div class="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/80 dark:bg-rose-950/20 p-4 text-rose-900 dark:text-rose-200 shadow-xs flex items-start gap-3">
-            <div class="p-1.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
-                <i data-lucide="server-off" class="h-5 w-5"></i>
-            </div>
-            <div class="flex-1 text-xs">
-                <h4 class="font-bold text-sm text-rose-800 dark:text-rose-300">Pemberitahuan: Service Machine Learning Tidak Aktif / Belum Di-hosting</h4>
-                <p class="mt-1 leading-relaxed text-rose-700 dark:text-rose-400">
-                    Sistem mendeteksi bahwa microservice AI FastAPI pada alamat <code class="px-1 py-0.5 rounded bg-rose-200/50 dark:bg-rose-900/50 font-mono">{{ $fastApiUrl }}</code> sedang offline atau tidak di-hosting.
-                    Hal ini wajar apabila backend dideploy ke shared hosting sedangkan service Python dijalankan secara lokal atau terpisah.
-                </p>
-                <div class="mt-2 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
-                    &bull; Riwayat metrik akurasi, kurva pelatihan, dan confusion matrix tetap dapat dilihat di bawah ini.<br>
-                    &bull; Untuk mengaktifkan kembali live testing: jalankan perintah <code class="px-1 py-0.5 rounded bg-rose-200/50 dark:bg-rose-900/50 font-mono">uvicorn src.main:app --port 8000</code> di server/laptop Anda.
+        <div class="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-border">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="info" class="h-4 w-4 text-muted-foreground"></i>
+                    <h3 class="text-sm font-semibold text-foreground">Status Service Machine Learning</h3>
                 </div>
+                <span class="text-xs text-muted-foreground font-medium">Offline</span>
             </div>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+                Microservice AI FastAPI pada alamat <code class="px-1.5 py-0.5 rounded bg-muted font-mono text-foreground text-[11px]">{{ $fastApiUrl }}</code> sedang offline atau tidak di-hosting. Hal ini wajar apabila backend dideploy ke shared hosting sedangkan service Python dijalankan secara lokal atau terpisah.
+            </p>
+            <ul class="mt-2.5 text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Riwayat metrik akurasi, kurva pelatihan, dan confusion matrix tetap dapat dilihat di bawah ini.</li>
+                <li>Untuk mengaktifkan kembali live testing: jalankan perintah <code class="px-1.5 py-0.5 rounded bg-muted font-mono text-foreground text-[11px]">uvicorn src.main:app --port 8000</code> di server/laptop Anda.</li>
+            </ul>
         </div>
     @else
-        <div class="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/80 dark:bg-emerald-950/20 p-3.5 text-emerald-900 dark:text-emerald-200 shadow-xs flex items-center justify-between gap-3 text-xs">
-            <div class="flex items-center gap-2.5">
-                <i data-lucide="check-circle" class="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0"></i>
-                <span>Microservice FastAPI aktif dan siap menerima inferensi prediksi gambar di <strong>{{ $fastApiUrl }}</strong>.</span>
+        <div class="rounded-xl border border-border bg-card p-4 shadow-xs flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 text-muted-foreground">
+                <i data-lucide="check-circle" class="h-4 w-4 text-emerald-600"></i>
+                <span>Microservice FastAPI aktif dan siap menerima inferensi prediksi gambar di <strong class="text-foreground">{{ $fastApiUrl }}</strong>.</span>
             </div>
         </div>
     @endif

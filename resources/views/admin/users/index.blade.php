@@ -23,23 +23,24 @@
             </div>
 
             <!-- Active Status Filter (Searchable TomSelect) -->
-            <select name="is_active" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari Status Akun...">
-                <option value="all">Semua Status Akun</option>
-                <option value="true" {{ ($filters['is_active'] ?? '') === 'true' ? 'selected' : '' }}>Aktif</option>
-                <option value="false" {{ ($filters['is_active'] ?? '') === 'false' ? 'selected' : '' }}>Nonaktif</option>
-            </select>
+            <div class="w-full min-w-0">
+                <select name="is_active" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Cari Status Akun...">
+                    <option value="all">Semua Status Akun</option>
+                    <option value="true" {{ ($filters['is_active'] ?? '') === 'true' ? 'selected' : '' }}>Aktif</option>
+                    <option value="false" {{ ($filters['is_active'] ?? '') === 'false' ? 'selected' : '' }}>Nonaktif</option>
+                </select>
+            </div>
 
-            <!-- Buttons -->
+            <!-- Buttons: Terapkan & Reset -->
             <div class="flex items-center gap-2">
                 <button type="submit" class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-primary py-2 px-3 text-xs font-medium text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
                     <i data-lucide="filter" class="h-3.5 w-3.5"></i>
                     <span>Terapkan</span>
                 </button>
-                @if (!empty($filters['search']) || (isset($filters['is_active']) && $filters['is_active'] !== 'all'))
-                    <a href="{{ route('admin.users.index') }}" class="inline-flex items-center justify-center rounded-md border border-input bg-background p-2 text-muted-foreground hover:bg-accent transition-colors" title="Reset Filter">
-                        <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>
-                    </a>
-                @endif
+                <a href="{{ route('admin.users.index') }}" class="inline-flex items-center justify-center gap-1.5 rounded-md border border-input bg-background py-2 px-3 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Reset Filter">
+                    <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>
+                    <span>Reset</span>
+                </a>
             </div>
         </form>
     </div>

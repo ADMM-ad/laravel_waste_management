@@ -8,7 +8,7 @@ return [
         'key' => 'scramble.openapi',
         'store' => 'file',
     ],
-    'openapi_version' => \Dedoc\Scramble\OpenApiVersion::V3_1,
+    'openapi_version' => class_exists(\Dedoc\Scramble\OpenApiVersion::class) ? \Dedoc\Scramble\OpenApiVersion::V3_1 : '3.1.0',
     'info' => [
         'version' => env('API_VERSION', '0.0.1'),
         'description' => 'Waste Management API Documentation',

@@ -4,50 +4,61 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Page Header & Filter Form -->
-    <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+    <!-- Page Header -->
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ $stats['is_citizen'] ? 'Dashboard Warga' : 'Dashboard Operasional' }}</h1>
-            <p class="text-sm text-muted-foreground">{{ $stats['is_citizen'] ? 'Pemantauan status laporan sampah Anda, riwayat penanganan, dan volume kontribusi lingkungan.' : 'Pemantauan metrik laporan sampah, tren eskalasi, dan distribusi kategori secara real-time.' }}</p>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-foreground">{{ $stats['is_citizen'] ? 'Dashboard Warga' : 'Dashboard Operasional' }}</h1>
+            <p class="text-xs sm:text-sm text-muted-foreground">{{ $stats['is_citizen'] ? 'Pemantauan status laporan sampah Anda, riwayat penanganan, dan volume kontribusi lingkungan.' : 'Pemantauan metrik laporan sampah, tren eskalasi, dan distribusi kategori secara real-time.' }}</p>
         </div>
+    </div>
 
-        <!-- Filter Bar -->
-        <form method="GET" action="{{ route('admin.dashboard') }}" class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center gap-1.5 rounded-md border border-input bg-card px-2.5 py-1.5 text-xs shadow-xs">
-                <span class="text-muted-foreground font-medium">Dari:</span>
+    <!-- Filter Toolbar Card -->
+    <div class="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
+        <form method="GET" action="{{ route('admin.dashboard') }}" class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-center">
+            <!-- Start Date -->
+            <div class="relative">
+                <span class="absolute left-3 top-2.5 text-xs font-medium text-muted-foreground">Dari:</span>
                 <input type="date" name="start_date" value="{{ $filters['start_date'] ?? '' }}"
-                       class="bg-transparent text-foreground focus:outline-none cursor-pointer">
+                       class="w-full rounded-md border border-input bg-background pl-12 pr-3 py-2 text-xs text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring">
             </div>
-            <div class="flex items-center gap-1.5 rounded-md border border-input bg-card px-2.5 py-1.5 text-xs shadow-xs">
-                <span class="text-muted-foreground font-medium">Sampai:</span>
+
+            <!-- End Date -->
+            <div class="relative">
+                <span class="absolute left-3 top-2.5 text-xs font-medium text-muted-foreground">Sampai:</span>
                 <input type="date" name="end_date" value="{{ $filters['end_date'] ?? '' }}"
-                       class="bg-transparent text-foreground focus:outline-none cursor-pointer">
+                       class="w-full rounded-md border border-input bg-background pl-16 pr-3 py-2 text-xs text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-ring">
             </div>
-            <select name="category_id" class="tom-select rounded-md border border-input bg-card text-xs text-foreground shadow-xs" placeholder="Semua Kategori">
-                <option value="all">Semua Kategori</option>
-                @foreach ($categories as $cat)
-                    <option value="{{ $cat->id }}" {{ ($filters['category_id'] ?? '') == $cat->id ? 'selected' : '' }}>
-                        {{ $cat->name }}
-                    </option>
-                @endforeach
-            </select>
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
-                <i data-lucide="filter" class="h-3.5 w-3.5"></i>
-                <span>Terapkan</span>
-            </button>
-            @if (!empty($filters['start_date']) || !empty($filters['end_date']) || (!empty($filters['category_id']) && $filters['category_id'] !== 'all'))
-                <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent transition-colors">
-                    <i data-lucide="rotate-ccw" class="h-3 w-3"></i>
+
+            <!-- Category Filter -->
+            <div class="w-full min-w-0">
+                <select name="category_id" class="tom-select rounded-md border border-input bg-background text-xs shadow-xs" placeholder="Semua Kategori">
+                    <option value="all">Semua Kategori</option>
+                    @foreach ($categories as $cat)
+                        <option value="{{ $cat->id }}" {{ ($filters['category_id'] ?? '') == $cat->id ? 'selected' : '' }}>
+                            {{ $cat->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Buttons: Terapkan & Reset -->
+            <div class="flex items-center gap-2">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-primary py-2 px-3 text-xs font-medium text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors">
+                    <i data-lucide="filter" class="h-3.5 w-3.5"></i>
+                    <span>Terapkan</span>
+                </button>
+                <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center justify-center gap-1.5 rounded-md border border-input bg-background py-2 px-3 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Reset Filter">
+                    <i data-lucide="rotate-ccw" class="h-3.5 w-3.5"></i>
                     <span>Reset</span>
                 </a>
-            @endif
+            </div>
         </form>
     </div>
 
     <!-- 6 Metric Cards Responsive Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3.5">
         <!-- Metric 1: Total Reports -->
-        <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs flex flex-col justify-between">
+        <div class="rounded-xl border border-border bg-card p-4 sm:p-5 text-card-foreground shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between pb-2">
                 <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{{ $stats['is_citizen'] ? 'Total Laporan Saya' : 'Total Laporan' }}</span>
                 <div class="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground shrink-0">
@@ -61,7 +72,7 @@
         </div>
 
         <!-- Metric 2: Pending -->
-        <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs flex flex-col justify-between">
+        <div class="rounded-xl border border-border bg-card p-4 sm:p-5 text-card-foreground shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between pb-2">
                 <span class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending</span>
                 <div class="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
@@ -75,7 +86,7 @@
         </div>
 
         <!-- Metric 3: In Progress -->
-        <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs flex flex-col justify-between">
+        <div class="rounded-xl border border-border bg-card p-4 sm:p-5 text-card-foreground shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between pb-2">
                 <span class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">In Progress</span>
                 <div class="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
@@ -89,7 +100,7 @@
         </div>
 
         <!-- Metric 4: Completed -->
-        <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs flex flex-col justify-between">
+        <div class="rounded-xl border border-border bg-card p-4 sm:p-5 text-card-foreground shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between pb-2">
                 <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Completed</span>
                 <div class="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -103,7 +114,7 @@
         </div>
 
         <!-- Metric 5: Rejected -->
-        <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs flex flex-col justify-between">
+        <div class="rounded-xl border border-border bg-card p-4 sm:p-5 text-card-foreground shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between pb-2">
                 <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Rejected</span>
                 <div class="flex h-8 w-8 items-center justify-center rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
@@ -117,7 +128,7 @@
         </div>
 
         <!-- Metric 6: Users / Laporan Selesai -->
-        <div class="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-xs flex flex-col justify-between">
+        <div class="rounded-xl border border-border bg-card p-4 sm:p-5 text-card-foreground shadow-xs flex flex-col justify-between">
             <div class="flex items-center justify-between pb-2">
                 <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{{ $stats['is_citizen'] ? 'Laporan Ditangani' : 'Total Warga' }}</span>
                 <div class="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground shrink-0">
