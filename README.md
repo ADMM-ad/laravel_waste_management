@@ -1,58 +1,146 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Web & Backend Service - Smart Waste Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **Komponen A: Website Development & RESTful API Backend**  
+> **Dibuat oleh: Adam Abdurrahman**  
+> **Studi Kasus:** Smart Waste Management System  
+> **Teknologi:** Laravel 12 (PHP 8.2+), Tailwind CSS, Shadcn UI Theme, Spatie Permission, Scramble OpenAPI
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🔗 Ekosistem Repository Terkait & Dataset
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Sistem ini merupakan bagian dari ekosistem **Smart Waste Management System** yang terbagi dalam tiga repositori terpisah:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- 🌐 **Website & Backend (Repository Ini):** [https://github.com/ADMM-ad/laravel_waste_management](https://github.com/ADMM-ad/laravel_waste_management)
+- 📱 **Mobile Application (Flutter):** [https://github.com/ADMM-ad/flutter_waste_management](https://github.com/ADMM-ad/flutter_waste_management)
+- 🤖 **Machine Learning Service (FastAPI):** [https://github.com/ADMM-ad/ml_waste_management](https://github.com/ADMM-ad/ml_waste_management)
+- 📊 **Sumber Dataset AI:** [https://www.kaggle.com/datasets/mostafaabla/garbage-classification](https://www.kaggle.com/datasets/mostafaabla/garbage-classification)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 📋 Deskripsi Proyek
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Modul **Laravel Waste Management** adalah sistem inti (*backend*) yang menangani antarmuka website administratif pengawas, antarmuka web warga pelapor, serta penyedia layanan RESTful API untuk aplikasi mobile Flutter.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Sistem ini dibangun dengan mematuhi prinsip Clean Architecture (*Service-Repository Pattern*), menjamin keamanan otorisasi bertingkat, dan menyediakan jejak audit (*audit trail*) transparan untuk setiap mutasi status laporan sampah di lapangan.
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## ✨ Fitur-Fitur Utama
+
+1. **Autentikasi & Otorisasi Berbasis Role:**
+   - Role **Admin**: Memantau statistik global kota, mengelola akun pengguna (aktif/nonaktif), mengubah status laporan, dan menghapus laporan tidak valid.
+   - Role **User (Warga)**: Mengirim laporan timbunan sampah, memantau riwayat status laporan miliknya, dan mengedit/membatalkan laporan yang masih berstatus *Pending*.
+2. **Dashboard Statistik Real-Time:**
+   - Visualisasi total laporan, laporan selesai, laporan ditangani, dan persentase penyelesaian.
+   - Filter rentang tanggal fleksibel (secara default menampilkan data *Bulan Ini*).
+   - Grafik distribusi kategori sampah dan tren pelaporan harian.
+3. **Manajemen Laporan Sampah (CRUD):**
+   - Formulir pelaporan warga di web dilengkapi *Leaflet OpenStreetMap Interactive Pin*, pendeteksi GPS browser, upload foto, pemilihan skala volume (*Kecil, Sedang, Besar*), dan tingkat urgensi (*Rendah, Sedang, Darurat*).
+   - Integrasi cerdas dengan Microservice Machine Learning (MobileNetV2) melalui proxy backend untuk mendeteksi kategori sampah secara instan tanpa isu CORS.
+   - Validasi error inline interaktif dan ramah pengguna di setiap kolom input.
+4. **Pembaruan Status & Riwayat Audit (Status Logs):**
+   - Modal pintasan ubah status dengan *Searchable Dropdown (Tom Select)* dan keterangan makna tiap status.
+   - Di dalam modal detail tetap disediakan formulir pembaruan status lengkap dengan riwayat log (*who, when, status transition, and notes*).
+   - Admin dapat memperbarui status laporan kapan saja tanpa terkunci permanen.
+5. **Manajemen Pengguna (User Management):**
+   - Tabel direktori pengguna dengan fitur pencarian dan filter status akun.
+   - Tombol aktifkan/nonaktifkan akun dilengkapi **Modal Konfirmasi Shadcn Kustom** (bebas dari *browser alert default*).
+6. **Optimasi Berkas Media Otomatis:**
+   - Kompresi gambar otomatis via PHP GD: resolusi di-resample maksimal 1600px dengan kompresi 80%, memastikan file tersimpan ringan di storage server dan selalu di bawah 5MB.
+7. **Dokumentasi API Terintegrasi:**
+   - Dokumentasi Swagger OpenAPI interaktif otomatis tersedia langsung di rute `/docs/api`.
+
+---
+
+## 🛠️ Persyaratan Sistem
+
+- PHP `>= 8.2` (dengan ekstensi `pdo`, `mbstring`, `openssl`, `tokenizer`, `xml`, `gd`, `sqlite3`/`pdo_mysql`, `curl`)
+- Composer `>= 2.x`
+- SQLite atau MySQL Database
+- Node.js & NPM *(Opsional, seluruh styling telah dioptimasi via Play CDN)*
+
+---
+
+## 🚀 Panduan Instalasi & Konfigurasi Port Lokal
+
+### ⚠️ Informasi Port Ekosistem Lokal
+Agar seluruh komponen tidak mengalami bentrok (*port conflict*), alokasi port lokal standar adalah:
+- **Laravel Backend & Web:** Port `8080` $\rightarrow$ `http://127.0.0.1:8080`
+- **Machine Learning FastAPI:** Port `8000` $\rightarrow$ `http://127.0.0.1:8000`
+- **Flutter Mobile:** Terhubung ke `http://10.0.2.2:8080/api/v1` (Emulator) atau `http://127.0.0.1:8080/api/v1` (Web)
+
+---
+
+### Langkah Menjalankan:
+
+1. **Masuk ke direktori:**
+   ```bash
+   cd laravel_waste_management
+   ```
+
+2. **Pasang dependensi PHP melalui Composer:**
+   ```bash
+   composer install
+   ```
+
+3. **Siapkan file konfigurasi environment:**
+   ```bash
+   cp .env.example .env
+   ```
+   *Pastikan di dalam `.env` variabel URL microservice AI mengarah ke port 8000:*
+   ```env
+   FASTAPI_URL=http://127.0.0.1:8000
+   ```
+
+4. **Generate Application Key:**
+   ```bash
+   php artisan key:generate
+   ```
+
+5. **Jalankan migrasi database dan seeder data awal:**
+   ```bash
+   php artisan migrate:fresh --seed
+   ```
+
+6. **Buat tautan simbolik untuk penyimpanan publik foto laporan:**
+   ```bash
+   php artisan storage:link
+   ```
+
+7. **Jalankan web server Laravel pada Port 8080:**
+   ```bash
+   php artisan serve --port=8080
+   ```
+
+8. **Akses di browser:**
+   - **Website Portal Admin / Warga:** [http://127.0.0.1:8080/admin/login](http://127.0.0.1:8080/admin/login)
+   - **Dokumentasi REST API Swagger:** [http://127.0.0.1:8080/docs/api](http://127.0.0.1:8080/docs/api)
+
+---
+
+## 🔑 Akun Demo Pengujian
+
+| Role | Username / Email | Password | Keterangan |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin` *(atau admin@example.com)* | `password123` | Akses penuh dashboard, kelola laporan, dan mutasi status |
+| **Warga (User)** | `warga@example.com` | `password123` | Akses pembuatan laporan dan pelacakan status penanganan |
+
+---
+
+## 🧪 Pengujian Otomatis (Automated Tests)
+
+Sistem telah dilengkapi dengan *Automated Feature & Unit Testing* yang komprehensif:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+php artisan test
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+**Hasil Pengujian:**
+- Total Tests: **27 Tests Passed**
+- Assertions: **102 Assertions Passed**
+- Status: **100% Passed (0 Errors)**
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+*Hak Cipta © 2026 Adam Abdurrahman — Smart Waste Management System.*
