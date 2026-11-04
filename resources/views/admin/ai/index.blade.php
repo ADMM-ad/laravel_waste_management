@@ -75,8 +75,8 @@
         </div>
         <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
             <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Capaian Akurasi Test</div>
-            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">100.00%</div>
-            <p class="text-[11px] text-emerald-600 font-medium mt-1">&check; Target Terpenuhi Sempurna</p>
+            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">96.67%</div>
+            <p class="text-[11px] text-emerald-600 font-medium mt-1">&check; Target Terpenuhi (&ge; 80%)</p>
         </div>
     </div>
 
@@ -159,7 +159,7 @@
         <div class="rounded-xl border border-border bg-card p-6 shadow-xs flex flex-col">
             <div class="pb-3 border-b border-border mb-4">
                 <h3 class="font-semibold text-foreground text-sm">Confusion Matrix</h3>
-                <p class="text-xs text-muted-foreground">Matriks perbandingan antara label aktual dan prediksi pada 45 data test.</p>
+                <p class="text-xs text-muted-foreground">Matriks perbandingan antara label aktual dan prediksi pada 180 data test (Real-World Dataset).</p>
             </div>
             <div class="flex-1 flex items-center justify-center">
                 @if ($confusionImage)
@@ -179,7 +179,7 @@
                 <p class="text-xs text-muted-foreground">Metrik Precision, Recall, F1-Score, dan Support pada data uji.</p>
             </div>
             <span class="inline-flex items-center rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                Accuracy: 100%
+                Accuracy: 96.67%
             </span>
         </div>
         <div class="rounded-lg bg-zinc-950 p-4 text-zinc-100 font-mono text-xs leading-relaxed overflow-x-auto shadow-inner">
